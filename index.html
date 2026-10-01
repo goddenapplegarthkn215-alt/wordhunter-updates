@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>杨梦婷给我学英语 · 内容更新源</title>
+<style>
+  :root{--bg:#0b0e18;--panel:#161d31;--line:#2b3656;--txt:#e8ecf8;--mut:#8b9ac0;--gold:#ffd60a;--ok:#4cd964}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font:14px/1.7 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:28px 30px;
+    max-width:460px;width:100%;box-shadow:0 16px 50px rgba(0,0,0,.45)}
+  h1{font-size:18px;margin-bottom:4px}
+  h1 small{color:var(--mut);font-weight:400;font-size:12px;margin-left:8px}
+  .desc{color:var(--mut);font-size:12px;margin-bottom:18px}
+  .row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+  .row:last-child{border-bottom:none}
+  .row .k{color:var(--mut);font-size:13px}
+  .row .v{font-weight:700}
+  .ok{color:var(--ok)} .gold{color:var(--gold)}
+  .foot{margin-top:18px;font-size:11px;color:var(--mut);text-align:center}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>杨梦婷给我学英语 <small>更新源在线</small></h1>
+  <div class="desc">App 会从这里拉取最新的词库与游戏数据。</div>
+  <div class="row"><span class="k">数据版本</span><span class="v gold" id="ver">读取中…</span></div>
+  <div class="row"><span class="k">更新说明</span><span class="v" id="notes">—</span></div>
+  <div class="row"><span class="k">更新文件</span><span class="v" id="files">—</span></div>
+  <div class="foot">作者：李思佳 · 给我最爱的宝宝杨梦婷</div>
+</div>
+<script>
+  (function () {
+    function inject(code) {
+      var s = document.createElement("script");
+      try { s.textContent = code; } catch (e) { s.appendChild(document.createTextNode(code)); }
+      document.head.appendChild(s);
+      try { s.parentNode.removeChild(s); } catch (e) {}
+    }
+    fetch("manifest.js?_t=" + Date.now())
+      .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
+      .then(function (text) {
+        inject(text);
+        var m = window.__WORDHUNTER_MANIFEST__;
+        if (!m) throw new Error("格式不正确");
+        document.getElementById("ver").textContent = "v" + m.dataVersion;
+        document.getElementById("notes").textContent = m.notes || "（无）";
+        document.getElementById("files").textContent = (m.files || []).length + " 个文件";
+      })
+      .catch(function (e) {
+        document.getElementById("ver").textContent = "离线";
+        document.getElementById("notes").textContent = "读取失败：" + e.message;
+      });
+  })();
+</script>
+</body>
+</html>
