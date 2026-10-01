@@ -1290,14 +1290,14 @@ function ghApi(path, opts){
   if(!tk) return Promise.reject(new Error("未填写令牌"));
   opts = opts || {};
   path += (path.indexOf("?") >= 0 ? "&" : "?") + "access_token=" + encodeURIComponent(tk);
-  opts.headers = Object.assign({"Accept": "application/json"}, opts.headers || {});
+  opts.headers = Object.assign({"Accept": "application/json", "Content-Type": "application/json"}, opts.headers || {});
   return fetch("https://gitee.com/api/v5" + path, opts);
 }
 function githubApi(path, opts){
   var tk = githubToken();
   if(!tk) return Promise.reject(new Error("未填写 GitHub 令牌"));
   opts = opts || {};
-  opts.headers = Object.assign({"Accept": "application/vnd.github+json", "Authorization": "Bearer " + tk}, opts.headers || {});
+  opts.headers = Object.assign({"Accept": "application/vnd.github+json", "Content-Type": "application/json", "Authorization": "Bearer " + tk}, opts.headers || {});
   return fetch("https://api.github.com" + path, opts);
 }
 
