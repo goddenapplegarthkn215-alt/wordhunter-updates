@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>杨梦婷给我学英语 · 后台管理</title>
+<style>
+:root{--bg:#0d1220;--panel:#161d31;--panel2:#1d2640;--line:#2b3656;--txt:#e8ecf8;--mut:#8b9ac0;
+--pri:#ffd166;--pri2:#ff9d47;--ok:#4cd964;--bad:#ff4d6d;--blu:#5ac8fa;--pur:#b06bff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font:14px/1.55 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif;padding-bottom:60px}
+header{position:sticky;top:0;z-index:50;background:linear-gradient(180deg,#11182b,#0d1220);border-bottom:1px solid var(--line);
+padding:12px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+header h1{font-size:17px;white-space:nowrap}
+header h1 small{color:var(--mut);font-weight:400;font-size:11px;margin-left:8px}
+.spacer{flex:1}
+nav{display:flex;gap:4px;padding:10px 16px;flex-wrap:wrap;border-bottom:1px solid var(--line);background:#0f1526;position:sticky;top:53px;z-index:40}
+nav button{background:var(--panel);border:1px solid var(--line);color:var(--mut);padding:7px 16px;border-radius:8px;cursor:pointer;font-size:13px}
+nav button.on{background:linear-gradient(180deg,#ffe9a3,#ffd166);color:#20140a;border-color:var(--pri);font-weight:800}
+main{padding:18px 20px;max-width:1180px;margin:0 auto}
+.page{display:none}.page.on{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+.card h2{font-size:14px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card h2 .cnt{color:var(--mut);font-weight:400;font-size:12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:13px;white-space:nowrap}
+.btn:hover{border-color:var(--pri)}
+.btn.pri{background:linear-gradient(180deg,#ffe9a3,#ffd166);color:#20140a;font-weight:800;border-color:var(--pri)}
+.btn.ok{background:#1d3a26;border-color:#2f6b43;color:var(--ok)}
+.btn.bad{background:#3a1d26;border-color:#6b2f3d;color:var(--bad)}
+.btn.sm{padding:4px 10px;font-size:12px}
+input,select,textarea{background:#0e1426;border:1px solid var(--line);color:var(--txt);border-radius:7px;padding:7px 10px;font-size:13px;font-family:inherit}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--pri)}
+input[type=number]{width:86px}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mut)}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+th{color:var(--mut);font-weight:600;white-space:nowrap;position:sticky;top:97px;background:var(--panel);z-index:5}
+tr:hover td{background:#1a233c}
+td .mini{color:var(--mut);font-size:11px;display:block;max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tag{display:inline-block;padding:1px 7px;border-radius:5px;font-size:11px;font-weight:700}
+.pager{display:flex;gap:6px;align-items:center;margin-top:10px;justify-content:flex-end}
+.mut{color:var(--mut)}.ok{color:var(--ok)}.bad{color:var(--bad)}.blu{color:var(--blu)}
+.toast{position:fixed;left:50%;bottom:34px;transform:translateX(-50%);background:#232d4d;border:1px solid var(--pri);
+padding:10px 22px;border-radius:10px;z-index:999;box-shadow:0 8px 30px rgba(0,0,0,.5);opacity:0;transition:.25s;pointer-events:none;font-size:13px}
+.toast.show{opacity:1}
+.modal-mask{position:fixed;inset:0;background:rgba(5,8,16,.72);z-index:200;display:none;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto}
+.modal-mask.on{display:flex}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:14px;width:640px;max-width:100%;padding:18px}
+.modal h3{margin-bottom:14px;font-size:15px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid .full{grid-column:1/-1}
+.asst{font-size:11px;color:var(--mut);margin-top:10px;line-height:1.7}
+.drop{border:2px dashed var(--line);border-radius:12px;padding:26px;text-align:center;color:var(--mut);cursor:pointer;transition:.2s}
+.drop:hover,.drop.over{border-color:var(--pri);color:var(--pri);background:#1a233c}
+.res-item{display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:var(--panel2)}
+.res-item img{width:54px;height:54px;object-fit:contain;background:#0a0e1c;border-radius:8px;image-rendering:pixelated}
+.res-item .meta{flex:1;min-width:0}
+.res-item .meta b{font-size:13px}.res-item .meta span{display:block;font-size:11px;color:var(--mut)}
+.checkline{padding:6px 0;border-bottom:1px dashed var(--line);display:flex;gap:8px;align-items:center}
+.bigbtn{display:block;width:100%;text-align:center;padding:13px;border-radius:10px;margin-bottom:10px;text-decoration:none;font-weight:800;cursor:pointer}
+code{background:#0a0e1c;padding:1px 6px;border-radius:5px;color:#ffd9a8;font-size:12px}
+.warn{background:#2e2413;border:1px solid #6b5320;border-radius:10px;padding:10px 14px;font-size:12.5px;color:#ffd9a8;margin-bottom:12px}
+.subtabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.subtabs button{padding:5px 13px;font-size:12.5px}
+.subtabs button.on{background:var(--blu);color:#06121c;border-color:var(--blu);font-weight:700}
+.statbox{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.statbox div{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center}
+.statbox b{display:block;font-size:20px;color:var(--pri)}
+.statbox span{font-size:11px;color:var(--mut)}
+@media(max-width:720px){.grid{grid-template-columns:1fr}.statbox{grid-template-columns:repeat(2,1fr)}}
+#loginGate{position:fixed;inset:0;z-index:10000;background:radial-gradient(1200px 700px at 50% -10%,#1a2242,#0d1220 60%,#070a14);
+display:flex;align-items:center;justify-content:center;padding:20px}
+#loginGate .login-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:30px 28px;width:340px;max-width:100%;
+box-shadow:0 20px 60px rgba(0,0,0,.5);text-align:center}
+#loginGate .login-logo{font-size:44px;line-height:1}
+#loginGate h2{font-size:17px;margin:10px 0 4px}
+#loginGate .login-sub{color:var(--mut);font-size:12px;margin-bottom:18px}
+#loginGate input{width:100%;text-align:center;font-size:14px;padding:10px;letter-spacing:2px}
+#loginGate .login-err{color:var(--bad);font-size:12px;height:18px;margin:8px 0 2px}
+#loginGate .btn{width:100%;padding:10px;font-size:14px;margin-top:6px}
+</style>
+</head>
+<body>
+
+<div id="loginGate">
+  <div class="login-card">
+    <div class="login-logo">🦐</div>
+    <h2>杨梦婷给我学英语</h2>
+    <div class="login-sub">后台管理 · 请输入管理员密码</div>
+    <input type="password" id="loginPwd" placeholder="管理员密码" autocomplete="current-password">
+    <div class="login-err" id="loginErr"></div>
+    <button class="btn pri" id="btnLogin">登 录</button>
+  </div>
+</div>
+
+<header>
+  <h1>🦐 杨梦婷给我学英语 · 后台管理<small id="hdrSub">未加载数据</small></h1>
+  <div class="spacer"></div>
+  <button class="btn" id="btnLoadWords">📥 导入 words.js</button>
+  <button class="btn" id="btnLoadGame">📥 导入 gamedata.js</button>
+  <button class="btn bad sm" id="btnClearAuto">清空本地草稿</button>
+  <button class="btn sm" id="btnLogout">↪ 退出登录</button>
+  <input type="file" id="fileWords" accept=".js,text/javascript" hidden>
+  <input type="file" id="fileGame" accept=".js,text/javascript" hidden>
+</header>
+
+<nav>
+  <button data-p="words" class="on">📖 单词词库</button>
+  <button data-p="game">⚔️ 游戏配置</button>
+  <button data-p="save">💾 玩家存档</button>
+  <button data-p="res">🖼️ 素材资源</button>
+  <button data-p="pub">📦 发布出包</button>
+</nav>
+
+<main>
+<!-- ================= 词库 ================= -->
+<section class="page on" id="page-words">
+  <div class="card">
+    <div class="row" style="margin-bottom:10px">
+      <select id="wordLevel"><option value="cet4">四级大纲（WORDS_CET4）</option><option value="cet6new">六级新增（WORDS_CET6_NEW）</option></select>
+      <input id="wordSearch" placeholder="搜索英文单词 / 中文释义 / 音标" style="flex:1;min-width:200px">
+      <select id="wordFilter"><option value="all">全部</option><option value="noex">缺例句</option><option value="noph">缺音标</option><option value="hase">有例句</option></select>
+      <span class="mut" id="wordCount"></span>
+      <div class="spacer" style="flex:1"></div>
+      <button class="btn pri" id="btnWordAdd">＋ 新增单词</button>
+      <button class="btn" id="btnWordBatch">📋 批量导入</button>
+    </div>
+    <div style="max-height:62vh;overflow:auto;border:1px solid var(--line);border-radius:8px">
+      <table><thead><tr>
+        <th style="width:46px">#</th><th>单词</th><th>词性</th><th>释义</th><th>音标</th><th style="width:120px">例句</th><th style="width:110px">操作</th>
+      </tr></thead><tbody id="wordTbody"></tbody></table>
+    </div>
+    <div class="pager">
+      <button class="btn sm" id="wpPrev">上一页</button><span id="wpInfo" class="mut"></span><button class="btn sm" id="wpNext">下一页</button>
+      <select id="wpSize"><option>50</option><option>100</option><option>200</option></select>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 游戏配置 ================= -->
+<section class="page" id="page-game">
+  <div class="card">
+    <div class="subtabs">
+      <button data-g="monsters" class="on">👹 怪物（<b id="cntM">0</b>）</button>
+      <button data-g="equip">🗡️ 装备/装扮（<b id="cntE">0</b>）</button>
+      <button data-g="tasks">📅 每日任务（<b id="cntT">0</b>）</button>
+      <button data-g="ach">🏆 成就（<b id="cntA">0</b>）</button>
+      <button data-g="rarity">🎨 稀有度</button>
+    </div>
+    <div class="row" style="margin-bottom:10px">
+      <input id="gSearch" placeholder="按名称 / id 搜索" style="flex:1;min-width:180px">
+      <div class="spacer" style="flex:1"></div>
+      <button class="btn pri" id="btnGAdd">＋ 新增</button>
+    </div>
+    <div style="max-height:60vh;overflow:auto;border:1px solid var(--line);border-radius:8px">
+      <table id="gTable"></table>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 存档 ================= -->
+<section class="page" id="page-save">
+  <div class="card">
+    <h2>💾 玩家存档编辑 <span class="cnt">先从手机设置里「导出存档」，把文本粘贴到这里</span></h2>
+    <div class="warn">存档保存在玩家自己的手机上（localStorage）。流程：App 内「⚙️设置 → 📤导出存档」→ 复制文本 → 粘贴到下方 → 修改 → 导出 → 手机上「📥导入存档」。</div>
+    <div class="row" style="margin-bottom:10px">
+      <button class="btn" id="btnSavPaste">① 粘贴存档 JSON</button>
+      <button class="btn" id="btnSavBlank">用空白新存档</button>
+      <button class="btn ok" id="btnSavExport">② 导出修改后的存档</button>
+      <button class="btn bad" id="btnSavValidate">校验 JSON</button>
+    </div>
+    <div class="statbox" id="savStats" style="margin-bottom:12px"></div>
+    <div class="grid">
+      <label class="f">词库级别
+        <select id="svLevel"><option value="cet4">cet4 四级</option><option value="cet6">cet6 六级</option><option value="cet6only">cet6only 仅六级新增</option></select></label>
+      <label class="f">连续签到天数 <input type="number" id="svStreak" min="0"></label>
+      <label class="f">当前奖励分 gold <input type="number" id="svGold" min="0"></label>
+      <label class="f">累计奖励分 totalGold <input type="number" id="svTotalGold" min="0"></label>
+      <label class="f">答对题数 <input type="number" id="svCorrect" min="0"></label>
+      <label class="f">答错题数 <input type="number" id="svWrong" min="0"></label>
+      <label class="f">胜场 <input type="number" id="svWins" min="0"></label>
+      <label class="f">最高连击 <input type="number" id="svCombo" min="0"></label>
+      <label class="f">每日任务完成次数 <input type="number" id="svDailyDone" min="0"></label>
+      <label class="f">最近签到日期 <input type="date" id="svSignDate"></label>
+      <label class="f">已学单词数（可手动覆盖统计）<input type="number" id="svLearned" min="0"></label>
+      <label class="f">新手教程已完成
+        <select id="svTut"><option value="false">否</option><option value="true">是</option></select></label>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn sm" id="btnSavAllAch">解锁全部成就</button>
+      <button class="btn sm" id="btnSavAllEq">拥有全部装备</button>
+      <button class="btn sm" id="btnSavAllWords">全部单词标记已掌握</button>
+      <button class="btn sm bad" id="btnSavClearProg">清空单词进度</button>
+    </div>
+    <div class="asst">提示：「全部单词标记已掌握」会给词库里每个词写入熟练度 5，重新计算已学数；导入手机后怪物关卡会全部解锁。</div>
+  </div>
+</section>
+
+<!-- ================= 素材 ================= -->
+<section class="page" id="page-res">
+  <div class="card">
+    <h2>🖼️ 装扮 / 开场素材替换 <span class="cnt">替换后在「发布出包」里一起打包，文件名必须保持不变</span></h2>
+    <div id="resList"></div>
+    <div class="asst">装扮图要求：透明背景 PNG（holy 支持 GIF 动图），正面站姿。开场视频 H.264 + AAC 的 mp4。替换文件仅在本次发布包里生效，随时可以移除恢复为包内原图。</div>
+  </div>
+</section>
+
+<!-- ================= 发布 ================= -->
+<section class="page" id="page-pub">
+  <div class="card">
+    <h2>📦 发布出包</h2>
+    <div class="statbox" style="margin-bottom:14px">
+      <div><b id="pbW4">0</b><span>四级单词</span></div>
+      <div><b id="pbW6">0</b><span>六级新增</span></div>
+      <div><b id="pbM">0</b><span>怪物</span></div>
+      <div><b id="pbE">0</b><span>装备/装扮</span></div>
+    </div>
+    <div class="card" style="background:var(--panel2)" id="pbChecks"></div>
+    <a class="bigbtn btn" id="pbDlWords">⬇️ 下载 words.js（词库）</a>
+    <a class="bigbtn btn" id="pbDlGame">⬇️ 下载 gamedata.js（游戏配置）</a>
+    <a class="bigbtn btn pri" id="pbDlZip">⬇️ 一键打包 update_pack.zip（含替换的素材）</a>
+    <div class="card" style="background:var(--panel2);margin-top:14px">
+      <h2>🛰️ 云端发布 · 一键推送给用户</h2>
+      <div class="grid" style="margin-bottom:10px">
+        <label class="f full">Cloudflare Worker 地址
+          <input id="cfUrl" placeholder="https://你的worker.workers.dev" autocomplete="off"></label>
+        <label class="f">新数据版本号 <input type="number" id="cfVer" min="3" value="3"></label>
+        <label class="f">发布口令 <input type="password" id="cfPwd" placeholder="和后台登录密码一致" autocomplete="current-password"></label>
+        <label class="f full">更新说明（会显示给用户）
+          <input id="cfNotes" placeholder="例如：新增 10 个单词、调整怪物数值"></label>
+      </div>
+      <div class="row">
+        <button class="btn pri" id="btnCloudPub">🚀 一键发布</button>
+        <button class="btn" id="btnCloudTest">测试连接</button>
+        <span class="mut" id="cfStatus"></span>
+      </div>
+      <div class="asst">发布后 GitHub Pages 会自动更新（约 1～2 分钟生效）。用户下次打开 App 看到「发现新内容」点更新即可，无需重装。</div>
+    </div>
+    <div class="asst">
+      出包方式：<br>
+      ① 把 <code>update_pack.zip</code> 和要修改的原版 APK、<code>repack.py</code> 放同一目录；<br>
+      ② 电脑装了 Python 3，执行 <code>python3 repack.py 原版.apk update_pack.zip wordhunter.jks</code>（没有签名环境就把 zip 发回给我，我来出 APK）；<br>
+      ③ 生成的新 APK 用原签名证书，可直接覆盖安装，玩家不会丢档。
+    </div>
+  </div>
+</section>
+</main>
+
+<div class="toast" id="toast"></div>
+<div class="modal-mask" id="mask"><div class="modal" id="modalBox"></div></div>
+
+<!-- 数据文件：用 script 标签加载，双击本页面(file://)也能直接读取，无需本地服务器 -->
+<script src="words.js"></script>
+<script src="gamedata.js"></script>
+<script>
+"use strict";
+/* ================= 全局状态 ================= */
+var DB = { words4:null, words6new:null, monsters:null, equip:null, tasks:null, ach:null,
+           rarColors:null, rarNames:null, levelTail:"", wordsHeader:"", gameHeader:"" };
+var ASSETS = {};   // 路径 -> {name, u8, dataUrl, size}
+var AUTOKEY = "wh_admin_draft_v1";
+var $ = function(id){return document.getElementById(id);};
+
+/* ================= 登录校验 ================= */
+var AUTHKEY = "wh_admin_auth_v1";
+var LOGIN_SALT = "wordhunter-admin-2026";
+var LOGIN_HASH = "918111d1fcff028d90b24c3c60393289d513d5254d3681be9b38f72bf8d936ba";
+function sha256hex(ascii){
+  function rightRotate(value, amount){ return (value>>>amount) | (value<<(32-amount)); }
+  var mathPow = Math.pow, maxWord = mathPow(2, 32), i, j, result = "", words = [];
+  var asciiBitLength = ascii.length*8;
+  var hash = sha256hex.h = sha256hex.h || [], k = sha256hex.k = sha256hex.k || [];
+  var primeCounter = k.length, isComposite = {};
+  for (var candidate = 2; primeCounter < 64; candidate++){
+    if(!isComposite[candidate]){
+      for(i = 0; i < 313; i += candidate){ isComposite[i] = candidate; }
+      hash[primeCounter] = (mathPow(candidate, .5)*maxWord)|0;
+      k[primeCounter++] = (mathPow(candidate, 1/3)*maxWord)|0;
+    }
+  }
+  ascii += "\x80";
+  while(ascii.length%64 - 56){ ascii += "\x00"; }
+  for(i = 0; i < ascii.length; i++){
+    j = ascii.charCodeAt(i);
+    if(j>>8){ return ""; }
+    words[i>>2] |= j << ((3 - i)%4)*8;
+  }
+  words[words.length] = ((asciiBitLength/maxWord)|0);
+  words[words.length] = (asciiBitLength);
+  for(j = 0; j < words.length;){
+    var w = words.slice(j, j += 16), oldHash = hash;
+    hash = hash.slice(0, 8);
+    for(i = 0; i < 64; i++){
+      var w15 = w[i - 15], w2 = w[i - 2], a = hash[0], e = hash[4];
+      var temp1 = hash[7]
+        + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))
+        + ((e&hash[5])^((~e)&hash[6])) + k[i]
+        + (w[i] = (i < 16) ? w[i] : (w[i - 16]
+          + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15>>>3))
+          + w[i - 7] + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2>>>10)))|0);
+      var temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))
+        + ((a&hash[1])^(a&hash[2])^(hash[1]&hash[2]));
+      hash = [(temp1 + temp2)|0].concat(hash);
+      hash[4] = (hash[4] + temp1)|0;
+    }
+    for(i = 0; i < 8; i++){ hash[i] = (hash[i] + oldHash[i])|0; }
+  }
+  for(i = 0; i < 8; i++){
+    for(j = 3; j + 1; j--){
+      var b = (hash[i]>>(j*8))&255;
+      result += ((b < 16) ? 0 : "") + b.toString(16);
+    }
+  }
+  return result;
+}
+function doLogin(){
+  var p = $("loginPwd").value;
+  if(!p){ $("loginErr").textContent = "请输入密码"; return; }
+  if(sha256hex(LOGIN_SALT + ":" + p) === LOGIN_HASH){
+    try{ sessionStorage.setItem(AUTHKEY, "1"); }catch(e){}
+    $("loginGate").style.display = "none";
+    $("loginErr").textContent = "";
+  }else{
+    $("loginErr").textContent = "密码错误，请重试";
+    $("loginPwd").value = ""; $("loginPwd").focus();
+  }
+}
+function doLogout(){
+  try{ sessionStorage.removeItem(AUTHKEY); }catch(e){}
+  location.reload();
+}
+$("btnLogin").onclick = doLogin;
+$("loginPwd").addEventListener("keydown", function(e){ if(e.key === "Enter"){ doLogin(); } });
+$("btnLogout").onclick = doLogout;
+(function(){
+  var authed = false;
+  try{ authed = sessionStorage.getItem(AUTHKEY) === "1"; }catch(e){}
+  if(authed){ $("loginGate").style.display = "none"; }
+  else{ $("loginPwd").focus(); }
+})();
+
+/* ================= 工具 ================= */
+function toast(msg, bad){
+  var t=$("toast"); t.textContent=msg; t.style.borderColor=bad?"var(--bad)":"var(--pri)";
+  t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(function(){t.classList.remove("show");},2200);
+}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+function qstr(s){return JSON.stringify(String(s==null?"":s));}
+function num(v,d){var n=parseFloat(v);return isNaN(n)?(d==null?0:d):n;}
+function uniq(arr,key){var seen={},out=[];arr.forEach(function(o){var k=o[key];if(k!=null&&!seen[k]){seen[k]=1;out.push(o);}});return out;}
+
+function modal(html){ $("modalBox").innerHTML=html; $("mask").classList.add("on"); }
+function closeModal(){ $("mask").classList.remove("on"); $("modalBox").innerHTML=""; }
+$("mask").addEventListener("click",function(e){if(e.target===$("mask"))closeModal();});
+
+function download(name, content, mime){
+  var blob = content instanceof Blob ? content : new Blob([content],{type:mime||"application/octet-stream"});
+  var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name;
+  document.body.appendChild(a); a.click(); setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},300);
+}
+function autosave(){
+  try{
+    localStorage.setItem(AUTOKEY, JSON.stringify({d:DB, a:Object.keys(ASSETS).reduce(function(o,k){
+      o[k]={name:ASSETS[k].name,size:ASSETS[k].size};return o;
+    },{})}));
+  }catch(e){ /* 素材太大时静默 */ }
+  refreshHeader();
+}
+function refreshHeader(){
+  var ok = DB.words4&&DB.monsters;
+  $("hdrSub").textContent = ok
+    ? ("已加载：四级 "+DB.words4.length+" 词 / 六级新增 "+(DB.words6new?DB.words6new.length:0)+" 词 / "+DB.monsters.length+" 怪物 / "+DB.equip.length+" 装备")
+    : "未加载数据（可点右上角导入，或放在服务器目录自动加载）";
+}
+
+/* 执行 words.js / gamedata.js 文本，取出 window.* 变量 */
+function evalData(text){
+  var sandbox={};
+  new Function("window", text)(sandbox);
+  return sandbox;
+}
+
+/* ================= 数据加载 ================= */
+function applyWordsText(text){
+  var sb = evalData(text);
+  if(!sb.WORDS_CET4) throw new Error("文件里没找到 window.WORDS_CET4");
+  DB.words4 = sb.WORDS_CET4;
+  DB.words6new = sb.WORDS_CET6_NEW || [];
+  var i = text.indexOf("window.WORD_LEVELS");
+  DB.levelTail = i>=0 ? text.slice(i) : "";
+  var m = text.match(/^([\s\S]*?)window\.WORDS_CET4/);
+  DB.wordsHeader = m ? m[1] : "";
+}
+function applyGameText(text){
+  var sb = evalData(text);
+  if(!sb.MONSTERS||!sb.EQUIPMENT) throw new Error("文件里缺少 MONSTERS / EQUIPMENT");
+  DB.monsters=sb.MONSTERS; DB.equip=sb.EQUIPMENT;
+  DB.tasks=sb.DAILY_TASKS||[]; DB.ach=sb.ACHIEVEMENTS||[];
+  DB.rarColors=sb.RARITY_COLORS||{}; DB.rarNames=sb.RARITY_NAMES||{};
+  var m=text.match(/^([\s\S]*?)window\.MONSTERS/); DB.gameHeader=m?m[1]:"";
+  // 成就 cond 函数字符串化，供编辑器修改
+  DB.ach.forEach(function(a){ if(typeof a.cond==="function") a.condExpr=fnToExpr(a.cond); });
+}
+function fnToExpr(fn){
+  var s=fn.toString().replace(/[\r\n]+/g," ");
+  var m=s.match(/=>\s*([\s\S]+)$/);
+  if(m) return m[1].trim().replace(/^\((.*)\)$/,"$1").trim();
+  var b=s.match(/return\s+([\s\S]+?)\s*;?\s*\}$/);
+  return b?b[1].trim():s;
+}
+/* 直接读取 <script src="data/*.js"> 挂到 window 上的全局数据（file:// 双击打开时可用） */
+function applyWordsGlobal(){
+  if(!window.WORDS_CET4)return false;
+  DB.words4=window.WORDS_CET4;
+  DB.words6new=window.WORDS_CET6_NEW||[];
+  DB.wordsHeader="";DB.levelTail="";
+  return true;
+}
+function applyGameGlobal(){
+  if(!window.MONSTERS||!window.EQUIPMENT)return false;
+  DB.monsters=window.MONSTERS;DB.equip=window.EQUIPMENT;
+  DB.tasks=window.DAILY_TASKS||[];DB.ach=window.ACHIEVEMENTS||[];
+  DB.rarColors=window.RARITY_COLORS||{};DB.rarNames=window.RARITY_NAMES||{};
+  DB.gameHeader="";
+  DB.ach.forEach(function(a){if(typeof a.cond==="function")a.condExpr=fnToExpr(a.cond);});
+  return true;
+}
+
+function loadFile(file, cb){
+  var r=new FileReader();
+  r.onload=function(){try{cb(r.result);}catch(e){toast("解析失败："+e.message,true);}};
+  r.readAsText(file,"utf-8");
+}
+$("btnLoadWords").onclick=function(){$("fileWords").click();};
+$("btnLoadGame").onclick=function(){$("fileGame").click();};
+$("fileWords").onchange=function(e){if(e.target.files[0])loadFile(e.target.files[0],function(t){applyWordsText(t);autosave();renderWords();toast("词库已加载");});};
+$("fileGame").onchange=function(e){if(e.target.files[0])loadFile(e.target.files[0],function(t){applyGameText(t);autosave();renderGame();toast("游戏配置已加载");});};
+$("btnClearAuto").onclick=function(){
+  if(confirm("清掉浏览器里自动保存的草稿？（不影响已导出的文件）")){localStorage.removeItem(AUTOKEY);toast("草稿已清空");}
+};
+
+/* ================= 词库页 ================= */
+var WP={level:"cet4",q:"",filter:"all",page:0,size:50};
+function curWordList(){return WP.level==="cet4"?DB.words4:DB.words6new;}
+function setCurWordList(a){if(WP.level==="cet4")DB.words4=a;else DB.words6new=a;}
+function wordFiltered(){
+  var list=curWordList()||[], q=WP.q.trim().toLowerCase();
+  return list.filter(function(w){
+    if(q && ((w.w||"").toLowerCase().indexOf(q)<0 && (w.m||"").toLowerCase().indexOf(q)<0 && (w.ph||"").toLowerCase().indexOf(q)<0)) return false;
+    if(WP.filter==="noex"&&w.e)return false;
+    if(WP.filter==="noph"&&w.ph)return false;
+    if(WP.filter==="hase"&&!w.e)return false;
+    return true;
+  });
+}
+function renderWords(){
+  if(!DB.words4){$("wordTbody").innerHTML='<tr><td colspan="7" class="mut" style="text-align:center;padding:40px">请先在右上角导入 words.js（或把本后台与 data 目录一起用 http 打开）</td></tr>';$("wordCount").textContent="";return;}
+  var all=wordFiltered(), total=all.length, pages=Math.max(1,Math.ceil(total/WP.size));
+  if(WP.page>=pages)WP.page=pages-1;
+  var slice=all.slice(WP.page*WP.size,(WP.page+1)*WP.size);
+  var base=WP.page*WP.size;
+  $("wordCount").textContent="共 "+total+" 词"+(total!==curWordList().length?"（全库 "+curWordList().length+"）":"");
+  $("wpInfo").textContent=(WP.page+1)+" / "+pages;
+  $("wordTbody").innerHTML=slice.map(function(w,i){
+    var idx=curWordList().indexOf(w);
+    return '<tr>'+
+      '<td class="mut">'+(base+i+1)+'</td>'+
+      '<td><b>'+esc(w.w)+'</b></td>'+
+      '<td>'+esc(w.p||"")+'</td>'+
+      '<td>'+esc(w.m||"")+'</td>'+
+      '<td class="mut">'+esc(w.ph||"")+'</td>'+
+      '<td>'+(w.e?'<span class="ok">有</span>':'<span class="mut">—</span>')+'</td>'+
+      '<td><button class="btn sm" data-we="'+idx+'">编辑</button> <button class="btn sm bad" data-wd="'+idx+'">删</button></td>'+
+    '</tr>';
+  }).join("");
+}
+$("wordLevel").onchange=function(e){WP.level=e.target.value;WP.page=0;renderWords();};
+$("wordSearch").oninput=function(e){WP.q=e.target.value;WP.page=0;renderWords();};
+$("wordFilter").onchange=function(e){WP.filter=e.target.value;WP.page=0;renderWords();};
+$("wpPrev").onclick=function(){WP.page=Math.max(0,WP.page-1);renderWords();};
+$("wpNext").onclick=function(){WP.page++;renderWords();};
+$("wpSize").onchange=function(e){WP.size=parseInt(e.target.value,10);WP.page=0;renderWords();};
+$("wordTbody").onclick=function(e){
+  var b=e.target.closest("button"); if(!b)return;
+  var idx=parseInt(b.dataset.we!=null?b.dataset.we:b.dataset.wd,10);
+  if(b.dataset.we!=null)editWord(idx);
+  else if(b.dataset.wd!=null){
+    var w=curWordList()[idx];
+    if(confirm("删除单词「"+w.w+"」？")){curWordList().splice(idx,1);autosave();renderWords();}
+  }
+};
+
+var WORD_FIELDS=[["w","英文单词","text"],["p","词性（如 n. / v. / a.）","text"],["m","中文释义","text"],
+ ["ph","音标","text"],["e","英文例句","text"],["t","例句翻译","text"]];
+function wordFormHtml(w){
+  return '<div class="grid">'+WORD_FIELDS.map(function(f){
+    return '<label class="'+(f[0]==="m"||f[0]==="e"||f[0]==="t"?"full":"")+'">'+f[1]+
+      (f[0]==="e"||f[0]==="t"?'<textarea rows="2" id="wf_'+f[0]+'">'+esc(w[f[0]]||"")+'</textarea>'
+       :'<input id="wf_'+f[0]+'" value="'+esc(w[f[0]]||"")+'">')+'</label>';
+  }).join("")+'</div>';
+}
+function editWord(idx){
+  var list=curWordList(), w=list[idx]||{};
+  modal('<h3>'+(idx>=0&&list[idx]?'编辑单词':'新增单词')+'</h3>'+wordFormHtml(w)+
+    '<div class="row" style="margin-top:14px;justify-content:flex-end"><button class="btn" id="wCancel">取消</button><button class="btn pri" id="wSave">保存</button></div>');
+  $("wCancel").onclick=closeModal;
+  $("wSave").onclick=function(){
+    var nw={}; WORD_FIELDS.forEach(function(f){var v=$("wf_"+f[0]).value.trim();if(v)nw[f[0]]=v;});
+    if(!nw.w){toast("单词不能为空",true);return;}
+    if(!nw.m){toast("中文释义不能为空",true);return;}
+    var dup=list.findIndex(function(x){return x.w.toLowerCase()===nw.w.toLowerCase();});
+    if(dup>=0&&dup!==idx){toast("已存在同名单词「"+nw.w+"」",true);return;}
+    if(idx>=0&&list[idx])list[idx]=nw;else list.push(nw);
+    autosave();renderWords();closeModal();toast("已保存");
+  };
+}
+$("btnWordAdd").onclick=function(){editWord(-1);};
+
+/* 批量导入 */
+$("btnWordBatch").onclick=function(){
+  modal('<h3>📋 批量导入单词</h3>'+
+  '<div class="asst" style="margin:0 0 8px">每行一个词，支持三种格式：<br>'+
+  '① 竖线分隔（推荐）：<code>abandon | v. | 丢弃；放弃 | əˈbændən | He abandoned his plan. | 他放弃了计划</code><br>'+
+  '② 制表/逗号 CSV：<code>abandon,v.,丢弃；放弃,əˈbændən</code><br>'+
+  '③ 简易：<code>abandon 丢弃；放弃</code>（英文后空格接释义）<br>'+
+  '已存在的同名单词将被覆盖更新。</div>'+
+  '<textarea id="batchText" rows="11" style="width:100%" placeholder="abandon | v. | 丢弃；放弃，抛弃 | əˈbændən | He abandoned his plan. | 他放弃了旅行的计划。"></textarea>'+
+  '<div class="row" style="margin-top:12px"><label class="f" style="flex-direction:row;align-items:center;gap:6px">导入到 <select id="batchLv"><option value="cet4">四级</option><option value="cet6new">六级新增</option></select></label>'+
+  '<div class="spacer" style="flex:1"></div><button class="btn" id="bCancel">取消</button><button class="btn pri" id="bGo">解析并导入</button></div>');
+  $("bCancel").onclick=closeModal;
+  $("bGo").onclick=function(){
+    var lines=$("batchText").value.split(/\r?\n/), add=[],upd=0,bad=[];
+    lines.forEach(function(line,ln){
+      line=line.trim(); if(!line)return;
+      var w=null;
+      if(line[0]==="{"||line[0]==="["){ try{var j=JSON.parse(line);if(j.w)w=j;}catch(e){} }
+      if(!w && line.indexOf("|")>=0){
+        var p=line.split("|").map(function(s){return s.trim();});
+        w={w:p[0],p:p[1]||"",m:p[2]||"",ph:p[3]||"",e:p[4]||"",t:p[5]||""};
+      }
+      if(!w && line.indexOf("\t")>=0){
+        var t=line.split("\t").map(function(s){return s.trim();});
+        w={w:t[0],p:t[1]||"",m:t[2]||"",ph:t[3]||"",e:t[4]||"",t:t[5]||""};
+      }
+      if(!w){
+        var m3=line.match(/^([A-Za-z][A-Za-z'’\-]*)\s*[,，]\s*([^,，]+)[,，]\s*(.+)$/);
+        if(m3)w={w:m3[1],p:m3[2].trim(),m:m3[3].trim()};
+      }
+      if(!w){
+        var m2=line.match(/^([A-Za-z][A-Za-z'’\-]*)\s+(.+)$/);
+        if(m2)w={w:m2[1],m:m2[2].trim()};
+      }
+      if(!w||!w.w||!w.m){bad.push(ln+1);return;}
+      ["p","ph","e","t"].forEach(function(k){if(!w[k])delete w[k];});
+      var target=$("batchLv").value==="cet4"?DB.words4:DB.words6new;
+      var ex=target.findIndex(function(x){return x.w.toLowerCase()===w.w.toLowerCase();});
+      if(ex>=0){target[ex]=w;upd++;}else{target.push(w);add.push(w);}
+    });
+    if(!add.length&&!upd){toast("没有解析出有效行",true);return;}
+    var bmsg="导入完成：新增 "+add.length+" 个，更新 "+upd+" 个";
+    if(bad.length)bmsg+="，失败行 "+bad.join(",");
+    autosave();renderWords();closeModal();
+    toast(bmsg);
+  };
+};
+
+/* ================= 游戏配置页 ================= */
+var GT="monsters", GQ="";
+var SCHEMAS={
+  monsters:{title:"怪物",key:"id",cols:["id","name","lv","hp","atk","spd","tier","gold","stage","desc"],
+    fields:[["id","id（英文唯一）","text"],["name","名称","text"],["lv","等级","num"],["hp","血量","num"],
+      ["atk","攻击","num"],["spd","出手速度(秒)","num"],["tier","层级","num"],["gold","金币奖励","num"],
+      ["stage","关卡(1-50)","num"],["desc","描述","text"]]},
+  equip:{title:"装备/装扮",key:"id",
+    fields:[["id","id（英文唯一）","text"],["slot","部位","select","weapon|weapon 武器,outfit|outfit 装扮"],
+      ["name","名称","text"],["cost","价格(奖励分)","num"],["rarity","稀有度1-7","num"],
+      ["atk","攻击加成","num"],["hp","生命加成","num"],["crit","暴击加成(0.15=15%)","num"],
+      ["combo","连击加成","num"],["style","绘制style/图片名","text"],["desc","描述","text"]]},
+  tasks:{title:"每日任务",key:"id",
+    fields:[["id","id","text"],["type","类型","select","learn|learn 学新词,review|review 复习,correct|correct 答对,battle|battle 战斗,combo|combo 连击"],
+      ["target","目标数量","num"],["reward","奖励分","num"],["icon","图标 emoji","text"],
+      ["title","标题","text"],["desc","描述","text"]]},
+  ach:{title:"成就",key:"id",
+    fields:[["id","id","text"],["name","名称","text"],["icon","图标 emoji","text"],
+      ["desc","描述","text"],["reward","奖励分","num"],["condExpr","达成条件（JS 表达式，参数 s）","text"]]}
+};
+function gList(){return {monsters:DB.monsters,equip:DB.equip,tasks:DB.tasks,ach:DB.ach}[GT];}
+function renderGameCounts(){
+  if(!DB.monsters)return;
+  $("cntM").textContent=DB.monsters.length;$("cntE").textContent=DB.equip.length;
+  $("cntT").textContent=DB.tasks.length;$("cntA").textContent=DB.ach.length;
+}
+function renderGame(){
+  if(!DB.monsters){$("gTable").innerHTML='<tr><td class="mut" style="text-align:center;padding:40px">请先在右上角导入 gamedata.js</td></tr>';return;}
+  renderGameCounts();
+  if(GT==="rarity"){renderRarity();return;}
+  var q=GQ.trim().toLowerCase(), list=gList();
+  var rows=list.map(function(o,i){return {o:o,i:i};}).filter(function(r){
+    return !q||(""+r.o.id+" "+r.o.name).toLowerCase().indexOf(q)>=0;
+  });
+  var sc=SCHEMAS[GT];
+  var cols=sc.cols||sc.fields.map(function(f){return f[0];});
+  var head="<thead><tr>"+cols.map(function(c){return "<th>"+({id:"id",name:"名称",lv:"级",hp:"血",atk:"攻",spd:"速",
+    tier:"层",gold:"金",stage:"关",desc:"描述",slot:"部位",cost:"价",rarity:"稀有",crit:"暴击",combo:"连击",
+    style:"style",type:"类型",target:"目标",reward:"奖励",icon:"图",title:"标题",condExpr:"条件"}[c]||c)+"</th>";}).join("")+"<th>操作</th></tr></thead>";
+  $("gTable").innerHTML=head+"<tbody>"+rows.map(function(r){
+    return "<tr>"+cols.map(function(c){
+      var v=r.o[c];
+      if(c==="rarity")return '<td><span class="tag" style="background:'+(DB.rarColors[v]||"#444")+'22;color:'+(DB.rarColors[v]||"#ccc")+'">'+esc(DB.rarNames[v]||v)+'</span></td>';
+      if(c==="desc")return '<td><span class="mini">'+esc(v)+'</span></td>';
+      if(c==="condExpr")return '<td><code style="font-size:11px">'+esc(String(v).length>34?String(v).slice(0,34)+"…":v)+'</code></td>';
+      if(c==="icon")return '<td style="font-size:16px">'+esc(v)+'</td>';
+      return "<td>"+esc(v==null?"":v)+"</td>";
+    }).join("")+'<td><button class="btn sm" data-ge="'+r.i+'">编辑</button> <button class="btn sm bad" data-gd="'+r.i+'">删</button></td></tr>';
+  }).join("")+"</tbody>";
+}
+function renderRarity(){
+  var lvls=Object.keys(DB.rarColors).sort(function(a,b){return a-b;});
+  $("gTable").innerHTML='<thead><tr><th>等级</th><th>名称</th><th>颜色</th><th>操作</th></tr></thead><tbody>'+
+    lvls.map(function(k){
+      return '<tr><td>'+k+'</td><td>'+esc(DB.rarNames[k]||"")+'</td>'+
+        '<td><span class="tag" style="background:'+DB.rarColors[k]+';color:#111">'+esc(DB.rarColors[k])+'</span></td>'+
+        '<td><button class="btn sm" data-rr="'+k+'">编辑</button></td></tr>';
+    }).join("")+"</tbody>";
+}
+$("gTable").onclick=function(e){
+  var b=e.target.closest("button");if(!b)return;
+  if(b.dataset.rr){editRarity(b.dataset.rr);return;}
+  var i=parseInt(b.dataset.ge!=null?b.dataset.ge:b.dataset.gd,10);
+  if(b.dataset.ge!=null)editGame(i);
+  if(b.dataset.gd!=null){var o=gList()[i];if(confirm("删除「"+(o.name||o.id)+"」？")){gList().splice(i,1);autosave();renderGame();}}
+};
+document.querySelectorAll("[data-g]").forEach(function(btn){
+  btn.onclick=function(){
+    document.querySelectorAll("[data-g]").forEach(function(x){x.classList.remove("on");});
+    btn.classList.add("on"); GT=btn.dataset.g; GQ="";$("gSearch").value=""; renderGame();
+  };
+});
+$("gSearch").oninput=function(e){GQ=e.target.value;renderGame();};
+$("btnGAdd").onclick=function(){if(GT==="rarity"){editRarity(null);}else editGame(-1);};
+
+function editGame(idx){
+  var sc=SCHEMAS[GT], list=gList(), o=idx>=0?list[idx]:{};
+  modal('<h3>'+(o.id?"编辑":"新增")+sc.title+'</h3><div class="grid">'+sc.fields.map(function(f){
+    var v=o[f[0]]==null?"":o[f[0]];
+    var inp;
+    if(f[2]==="select"){
+      inp='<select id="gf_'+f[0]+'">'+f[3].split(",").map(function(op){
+        var p=op.split("|");return '<option value="'+p[0]+'"'+(String(v)===p[0]?" selected":"")+'>'+p[1]+'</option>';
+      }).join("")+'</select>';
+    }else if(f[0]==="desc"||f[0]==="condExpr"){
+      inp='<textarea rows="'+(f[0]==="condExpr"?2:3)+'" id="gf_'+f[0]+'">'+esc(v)+'</textarea>';
+    }else{
+      inp='<input type="'+(f[2]==="num"?"number":"text")+'" step="any" id="gf_'+f[0]+'" value="'+esc(v)+'">';
+    }
+    return '<label class="'+(["desc","condExpr"].indexOf(f[0])>=0?"full":"")+'">'+f[1]+inp+'</label>';
+  }).join("")+"</div>"+(GT==="ach"?'<div class="asst">可用统计字段：s.learned 已学词数 / s.totalCorrect 答对 / s.bestCombo 最高连击 / s.wins 胜场 / s.dragonSlain 屠龙 / s.dailyDone 任务次数 / s.streak 连续签到 / s.totalGold 累计分 / s.ownsAll 全装备 / s.perfectWin / s.noDamageWin。<br>可点「试跑」验证表达式。</div>':"")+
+  '<div class="row" style="margin-top:12px;justify-content:flex-end">'+
+  (GT==="ach"?'<button class="btn" id="gTest">试跑条件</button>':"")+
+  '<button class="btn" id="gCancel">取消</button><button class="btn pri" id="gSave">保存</button></div>');
+  $("gCancel").onclick=closeModal;
+  if($("gTest"))$("gTest").onclick=function(){
+    try{
+      var f=new Function("s","return ("+$("gf_condExpr").value+");");
+      var sample={learned:100,totalCorrect:200,bestCombo:12,wins:10,dragonSlain:false,dailyDone:7,
+        streak:7,totalGold:2000,ownsAll:false,perfectWin:false,noDamageWin:false};
+      toast("试跑结果（模拟中等玩家）："+(f(sample)?"✅ 已达成":"❌ 未达成"));
+    }catch(err){toast("条件语法错误："+err.message,true);}
+  };
+  $("gSave").onclick=function(){
+    var nw={};
+    sc.fields.forEach(function(f){
+      var v=$("gf_"+f[0]).value.trim();
+      if(f[2]==="num"){if(v!=="")nw[f[0]]=num(v);}
+      else if(v!=="")nw[f[0]]=v;
+    });
+    if(!nw.id){toast("id 不能为空",true);return;}
+    if(GT!=="ach"&&!nw.name){toast("名称不能为空",true);return;}
+    if(GT==="ach"){
+      if(!nw.condExpr){toast("达成条件不能为空",true);return;}
+      try{new Function("s","return ("+nw.condExpr+");");}catch(e){toast("条件表达式语法错误",true);return;}
+    }
+    var du=list.findIndex(function(x){return x.id===nw.id;});
+    if(du>=0&&du!==idx){toast("id 已存在："+nw.id,true);return;}
+    if(du>=0)list[du]=nw;else list.push(nw);
+    autosave();renderGame();closeModal();toast("已保存");
+  };
+}
+function editRarity(k){
+  var isNew=k==null;
+  modal('<h3>'+(isNew?"新增稀有度":"编辑稀有度 "+k)+'</h3><div class="grid">'+
+    (isNew?'<label class="f">等级（1-7数字）<input id="rKey" type="number" min="1" max="7"></label>':'<input type="hidden" id="rKey" value="'+k+'">')+
+    '<label class="f">名称 <input id="rName" value="'+esc(isNew?"":DB.rarNames[k])+'"></label>'+
+    '<label class="f">颜色（#rrggbb）<input id="rColor" value="'+esc(isNew?"#999999":DB.rarColors[k])+'"></label></div>'+
+    '<div class="row" style="margin-top:12px;justify-content:flex-end"><button class="btn" id="rCancel">取消</button><button class="btn pri" id="rSave">保存</button></div>');
+  $("rCancel").onclick=closeModal;
+  $("rSave").onclick=function(){
+    var key=$("rKey").value.trim(); if(!key){toast("等级不能为空",true);return;}
+    var col=$("rColor").value.trim();
+    if(!/^#[0-9a-fA-F]{6}$/.test(col)){toast("颜色格式应为 #ffd166",true);return;}
+    DB.rarColors[key]=col;DB.rarNames[key]=$("rName").value.trim()||key;
+    autosave();renderGame();closeModal();toast("已保存");
+  };
+}
+
+/* ================= 序列化输出 ================= */
+function jsWord(w){
+  var order=["w","p","m","ph","e","t"], parts=[];
+  order.forEach(function(k){ if(w[k]!=null&&w[k]!=="") parts.push(k+":"+qstr(w[k])); });
+  return "  {"+parts.join(", ")+"}";
+}
+function serializeWords(){
+  var head=DB.wordsHeader||'/* 单词词库（后台管理导出） */\n';
+  var out=head+"window.WORDS_CET4 = [\n"+DB.words4.map(jsWord).join(",\n")+"\n];\n\n"+
+    "/* ---- 六级新增 ---- */\nwindow.WORDS_CET6_NEW = [\n"+DB.words6new.map(jsWord).join(",\n")+"\n];\n\n";
+  out += DB.levelTail || ('/* 词库级别定义 */\nwindow.WORD_LEVELS = {\n'+
+    '  "cet4":     { name: "四级",     desc: "四级大纲全部单词",       get: function () { return window.WORDS_CET4; } },\n'+
+    '  "cet6":     { name: "六级",     desc: "六级考纲全部（含四级）", get: function () { return window.WORDS_CET4.concat(window.WORDS_CET6_NEW); } },\n'+
+    '  "cet6only": { name: "六级新增", desc: "仅六级新增单词",         get: function () { return window.WORDS_CET6_NEW; } }\n'+
+    '};\n');
+  return out;
+}
+function lit(v){
+  if(typeof v==="string")return qstr(v);
+  if(typeof v==="number"||v===true||v===false||v===null)return String(v);
+  return "null";
+}
+function jsObj(o, order){
+  var keys=order||Object.keys(o);
+  return "  { "+keys.filter(function(k){return o[k]!==undefined;}).map(function(k){
+    if(k==="condExpr")return null;
+    return k+": "+lit(o[k]);
+  }).filter(Boolean).join(", ")+" }";
+}
+function serializeGame(){
+  var out=(DB.gameHeader||"/* 游戏数据（后台管理导出） */\n\n")+
+    "/* ---------- 怪物 ---------- */\nwindow.MONSTERS = [\n"+
+    DB.monsters.map(function(o){return jsObj(o,["id","name","lv","hp","atk","spd","tier","gold","stage","desc"]);}).join(",\n")+"\n];\n\n"+
+    "/* ---------- 装备 ---------- */\nwindow.EQUIPMENT = [\n"+
+    DB.equip.map(function(o){return jsObj(o,["id","slot","name","cost","rarity","atk","hp","crit","combo","style","desc"]);}).join(",\n")+"\n];\n\n"+
+    "/* 稀有度颜色 */\nwindow.RARITY_COLORS = {"+
+      Object.keys(DB.rarColors).sort().map(function(k){return k+":"+qstr(DB.rarColors[k]);}).join(", ")+"};\n"+
+    "window.RARITY_NAMES = {"+
+      Object.keys(DB.rarNames).sort().map(function(k){return k+":"+qstr(DB.rarNames[k]);}).join(", ")+"};\n\n"+
+    "/* ---------- 每日任务 ---------- */\nwindow.DAILY_TASKS = [\n"+
+    DB.tasks.map(function(o){return jsObj(o,["id","type","target","reward","icon","title","desc"]);}).join(",\n")+"\n];\n\n"+
+    "/* ---------- 成就 ---------- */\nwindow.ACHIEVEMENTS = [\n"+
+    DB.ach.map(function(o){
+      return "  { id:"+qstr(o.id)+", name:"+qstr(o.name)+", icon:"+qstr(o.icon)+", desc:"+qstr(o.desc)+
+             ", reward:"+num(o.reward)+", cond: s => ("+o.condExpr+") }";
+    }).join(",\n")+"\n];\n";
+  return out;
+}
+
+/* ================= 存档页 ================= */
+var SAV=null;
+function defaultSave(){
+  return {version:1,level:"cet4",gold:0,totalGold:0,progress:{},
+    stats:{learned:0,totalCorrect:0,totalWrong:0,wins:0,losses:0,bestCombo:0,dailyDone:0,
+      dragonSlain:false,perfectWin:false,noDamageWin:false},
+    daily:{date:"",tasks:{}},lastSignDate:"",streak:0,unlocked:[],
+    owned:["w_stick","o_plain"],equipped:{weapon:"w_stick",outfit:"o_plain"},bestiary:{},
+    settings:{sound:true,vibe:true,bgm:false,volume:0.6},tutorialDone:false};
+}
+function renderSav(){
+  if(!SAV)return;
+  var learned=Object.keys(SAV.progress||{}).filter(function(k){return (SAV.progress[k].s||0)>=3;}).length;
+  $("savStats").innerHTML=[
+    ["已学单词",learned],["奖励分",SAV.gold],["累计分",SAV.totalGold],
+    ["答对/错",(SAV.stats.totalCorrect||0)+"/"+(SAV.stats.totalWrong||0)],
+    ["胜场",SAV.stats.wins||0],["最高连击",SAV.stats.bestCombo||0],
+    ["成就",(SAV.unlocked||[]).length],["装备",(SAV.owned||[]).length]
+  ].map(function(x){return "<div><b>"+x[1]+"</b><span>"+x[0]+"</span></div>";}).join("");
+  $("svLevel").value=SAV.level||"cet4";
+  $("svStreak").value=SAV.streak||0;$("svGold").value=SAV.gold||0;$("svTotalGold").value=SAV.totalGold||0;
+  $("svCorrect").value=SAV.stats.totalCorrect||0;$("svWrong").value=SAV.stats.totalWrong||0;
+  $("svWins").value=SAV.stats.wins||0;$("svCombo").value=SAV.stats.bestCombo||0;
+  $("svDailyDone").value=SAV.stats.dailyDone||0;$("svSignDate").value=SAV.lastSignDate||"";
+  $("svLearned").value=SAV.stats.learned||0;$("svTut").value=SAV.tutorialDone?"true":"false";
+}
+function collectSav(){
+  SAV.level=$("svLevel").value;
+  SAV.streak=num($("svStreak").value);SAV.gold=num($("svGold").value);SAV.totalGold=num($("svTotalGold").value);
+  SAV.stats.totalCorrect=num($("svCorrect").value);SAV.stats.totalWrong=num($("svWrong").value);
+  SAV.stats.wins=num($("svWins").value);SAV.stats.bestCombo=num($("svCombo").value);
+  SAV.stats.dailyDone=num($("svDailyDone").value);SAV.lastSignDate=$("svSignDate").value;
+  SAV.stats.learned=num($("svLearned").value);SAV.tutorialDone=$("svTut").value==="true";
+}
+$("btnSavPaste").onclick=function(){
+  modal('<h3>粘贴手机导出的存档</h3><textarea id="savIn" rows="10" style="width:100%" placeholder=\'{"version":1,...}\'></textarea>'+
+    '<div class="row" style="margin-top:12px;justify-content:flex-end"><button class="btn" id="siC">取消</button><button class="btn pri" id="siGo">读取</button></div>');
+  $("siC").onclick=closeModal;
+  $("siGo").onclick=function(){
+    try{
+      var s=JSON.parse($("savIn").value);
+      SAV=Object.assign(defaultSave(),s);
+      SAV.stats=Object.assign(defaultSave().stats,s.stats||{});
+      SAV.settings=Object.assign(defaultSave().settings,s.settings||{});
+      renderSav();closeModal();toast("存档已读取，可修改");
+    }catch(e){toast("JSON 解析失败："+e.message,true);}
+  };
+};
+$("btnSavBlank").onclick=function(){SAV=defaultSave();renderSav();toast("已载入空白存档");};
+$("btnSavValidate").onclick=function(){
+  if(!SAV){toast("还没有存档",true);return;}
+  try{collectSav();JSON.stringify(SAV);toast("✅ 格式正确，可导出");}catch(e){toast(e.message,true);}
+};
+$("btnSavAllAch").onclick=function(){
+  if(!SAV)return;collectSav();
+  SAV.unlocked=(DB.ach||[]).map(function(a){return a.id;});
+  renderSav();toast("已解锁全部 "+SAV.unlocked.length+" 个成就");
+};
+$("btnSavAllEq").onclick=function(){
+  if(!SAV)return;collectSav();
+  SAV.owned=(DB.equip||[]).map(function(e){return e.id;});
+  renderSav();toast("已拥有全部装备");
+};
+$("btnSavAllWords").onclick=function(){
+  if(!SAV||!DB.words4){toast("请先加载词库",true);return;}
+  collectSav();var now=Date.now();
+  DB.words4.concat(DB.words6new||[]).forEach(function(w){
+    SAV.progress[w.w]={s:5,seen:5,wrong:0,last:now};
+  });
+  SAV.stats.learned=Object.keys(SAV.progress).length;
+  renderSav();toast("全部 "+SAV.stats.learned+" 词已掌握");
+};
+$("btnSavClearProg").onclick=function(){
+  if(!SAV)return;collectSav();SAV.progress={};SAV.stats.learned=0;renderSav();toast("单词进度已清空");
+};
+$("btnSavExport").onclick=function(){
+  if(!SAV){toast("还没有存档",true);return;}
+  collectSav();
+  var txt=JSON.stringify(SAV);
+  modal('<h3>导出存档</h3><div class="asst">全选下面文本复制，到手机 App「⚙️设置 → 📥导入存档」粘贴。也可下载存档文件备用。</div>'+
+    '<textarea id="savOut" rows="10" style="width:100%">'+esc(txt)+'</textarea>'+
+    '<div class="row" style="margin-top:12px;justify-content:flex-end"><button class="btn" id="soCopy">复制到剪贴板</button>'+
+    '<button class="btn" id="soDl">下载 .json</button><button class="btn pri" id="soOk">完成</button></div>');
+  $("soOk").onclick=closeModal;
+  $("soCopy").onclick=function(){
+    var t=$("savOut");t.select();
+    var p=navigator.clipboard?navigator.clipboard.writeText(t.value):Promise.reject();
+    p.then(function(){toast("已复制");}).catch(function(){document.execCommand("copy");toast("已复制");});
+  };
+  $("soDl").onclick=function(){download("wordhunter_save.json",txt,"application/json");};
+};
+
+/* ================= 素材页 ================= */
+var RES_DEFS=[
+  ["assets/img/outfits/plain.png","装扮 · 素白学子袍","image","透明 PNG"],
+  ["assets/img/outfits/azure.png","装扮 · 青碧云纹袍","image","透明 PNG"],
+  ["assets/img/outfits/crimson.png","装扮 · 赤霞锦缎衣","image","透明 PNG"],
+  ["assets/img/outfits/obsidian.png","装扮 · 玄铁战甲","image","透明 PNG"],
+  ["assets/img/outfits/frost.png","装扮 · 霜雪白羽衣","image","透明 PNG"],
+  ["assets/img/outfits/royal.png","装扮 · 紫极星君袍","image","透明 PNG"],
+  ["assets/img/outfits/holy.gif","装扮 · 鎏金圣典袍（动图）","image","GIF 动图"],
+  ["assets/img/intro_poster.jpg","开场视频封面海报","image","JPG 竖图"],
+  ["assets/img/splash_boy.png","开场立绘 · 男孩","image","透明 PNG"],
+  ["assets/img/splash_girl.png","开场立绘 · 女孩","image","透明 PNG"],
+  ["assets/video/intro.mp4","开场视频","video","H.264/AAC mp4"],
+  ["res/mipmap-xxxhdpi-v4/ic_launcher.png","应用图标(xxxhdpi 192px)","image","192×192 PNG"]
+];
+function renderRes(){
+  $("resList").innerHTML=RES_DEFS.map(function(d){
+    var a=ASSETS[d[0]], cur=a?('<img src="'+a.dataUrl+'">'):'<div class="res-thumb"></div>';
+    var preview=d[2]==="video"&&a?'<video src="'+a.dataUrl+'" style="width:54px;height:54px;object-fit:cover;border-radius:8px" muted></video>':cur;
+    return '<div class="res-item">'+preview+
+      '<div class="meta"><b>'+d[1]+'</b><span><code>'+d[0]+'</code> · '+d[3]+(a?' · <span class="ok">已替换 '+Math.round(a.size/1024)+'KB</span>':' · <span class="mut">未替换（用包内原图）</span>')+'</span></div>'+
+      '<button class="btn sm pri" data-rpick="'+d[0]+'">选择文件</button>'+
+      (a?'<button class="btn sm bad" data-rrm="'+d[0]+'">移除</button>':"")+'</div>';
+  }).join("");
+}
+$("resList").onclick=function(e){
+  var b=e.target.closest("button");if(!b)return;
+  var path=b.dataset.rpick;
+  if(path){
+    var inp=document.createElement("input");
+    inp.type="file";
+    inp.onchange=function(){
+      var f=inp.files[0];if(!f)return;
+      if(f.size>20*1024*1024){toast("文件过大（>20MB），视频请先压缩",true);return;}
+      var fr=new FileReader();
+      fr.onload=function(){
+        var u8=new Uint8Array(fr.result);
+        ASSETS[path]={name:f.name,size:f.size,u8:u8,dataUrl:function(){
+          var bin="",chunk=0x8000;
+          for(var i=0;i<u8.length;i+=chunk){bin+=String.fromCharCode.apply(null,u8.subarray(i,i+chunk));}
+          return "data:"+f.type+";base64,"+btoa(bin);
+        }()};
+        autosave();renderRes();toast("已加入替换："+f.name);
+      };
+      fr.readAsArrayBuffer(f);
+    };
+    inp.click();
+  }
+  if(b.dataset.rrm){delete ASSETS[b.dataset.rrm];autosave();renderRes();}
+};
+
+/* ================= 纯 JS ZIP（STORED，无压缩依赖） ================= */
+var CRC_TABLE=(function(){var t=[];for(var n=0;n<256;n++){var c=n;for(var k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
+function crc32(u8){var c=0xFFFFFFFF;for(var i=0;i<u8.length;i++)c=CRC_TABLE[(c^u8[i])&0xFF]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
+function strU8(s){return new TextEncoder().encode(s);}
+function buildZip(files){
+  var chunks=[],central=[],offset=0;
+  files.forEach(function(f){
+    var name=strU8(f.name),crc=crc32(f.u8);
+    var lh=new DataView(new ArrayBuffer(30));
+    lh.setUint32(0,0x04034b54,true);lh.setUint16(4,20,true);lh.setUint16(6,0x0800,true);
+    lh.setUint16(8,0,true);lh.setUint16(10,0,true);
+    lh.setUint32(14,crc,true);lh.setUint32(18,f.u8.length,true);lh.setUint32(22,f.u8.length,true);
+    lh.setUint16(26,name.length,true);lh.setUint16(28,0,true);
+    var head=new Uint8Array(30);for(var i=0;i<30;i++)head[i]=lh.getUint8(i);
+    chunks.push(head,name,f.u8);
+    var cd=new DataView(new ArrayBuffer(46));
+    cd.setUint32(0,0x02014b50,true);cd.setUint16(4,20,true);cd.setUint16(6,20,true);
+    cd.setUint16(8,0x0800,true);cd.setUint32(16,crc,true);
+    cd.setUint32(20,f.u8.length,true);cd.setUint32(24,f.u8.length,true);
+    cd.setUint16(28,name.length,true);cd.setUint32(42,offset,true);
+    var cdB=new Uint8Array(46);for(var j=0;j<46;j++)cdB[j]=cd.getUint8(j);
+    central.push(cdB,name);
+    offset+=30+name.length+f.u8.length;
+  });
+  var cdSize=central.reduce(function(n,c){return n+c.length;},0);
+  var cdOffset=offset;
+  var eocd=new DataView(new ArrayBuffer(22));
+  eocd.setUint32(0,0x06054b50,true);eocd.setUint16(8,files.length,true);eocd.setUint16(10,files.length,true);
+  eocd.setUint32(12,cdSize,true);eocd.setUint32(16,cdOffset,true);
+  var eo=new Uint8Array(22);for(var k=0;k<22;k++)eo[k]=eocd.getUint8(k);
+  chunks.push.apply(chunks,central);chunks.push(eo);
+  return new Blob(chunks,{type:"application/zip"});
+}
+
+/* ================= 发布页 ================= */
+function runChecks(){
+  var problems=[],warns=[];
+  if(!DB.words4||!DB.monsters){problems.push("数据未加载，请先导入 words.js 和 gamedata.js");return {p:problems,w:warns};}
+  ["words4","words6new"].forEach(function(k){
+    var seen={};(DB[k]||[]).forEach(function(w){if(seen[w.w])problems.push("重复单词："+w.w+"（"+k+"）");seen[w.w]=1;
+      if(!w.m)problems.push("单词缺释义："+w.w);});
+  });
+  var ids={};
+  DB.monsters.forEach(function(m){if(ids[m.id])problems.push("怪物 id 重复："+m.id);ids[m.id]=1;
+    if(m.stage<1||m.stage>50)warns.push("怪物 "+m.id+" 的关卡不在 1-50");
+    if(!(m.hp>0))problems.push("怪物 "+m.id+" 血量无效");});
+  var eseen={},styles={};
+  DB.equip.forEach(function(e){if(eseen[e.id])problems.push("装备 id 重复："+e.id);eseen[e.id]=1;
+    if(["weapon","outfit"].indexOf(e.slot)<0)warns.push("装备 "+e.id+" 部位异常："+e.slot);
+    styles[e.style]=1;});
+  var atasks={};DB.tasks.forEach(function(t){atasks[t.id]=1;
+    if(["learn","review","correct","battle","combo"].indexOf(t.type)<0)problems.push("任务 "+t.id+" 类型无效："+t.type);});
+  DB.ach.forEach(function(a){try{new Function("s","return ("+a.condExpr+");");}catch(e){problems.push("成就 "+a.id+" 条件语法错误");}});
+  var noImg=DB.equip.filter(function(e){return e.slot==="outfit"&&["plain","azure","crimson","obsidian","frost","royal","holy"].indexOf(e.style)<0;})
+    .map(function(e){return e.style;});
+  if(noImg.length)warns.push("以下装扮 style 没有对应图片，需在素材页补充 outfits/ 同名 png："+noImg.join(", "));
+  return {p:problems,w:warns};
+}
+function renderPub(){
+  if(!DB.words4){$("pbChecks").innerHTML='<span class="bad">尚未加载数据</span>';return;}
+  $("pbW4").textContent=DB.words4.length;$("pbW6").textContent=(DB.words6new||[]).length;
+  $("pbM").textContent=DB.monsters.length;$("pbE").textContent=DB.equip.length;
+  var r=runChecks(),h="";
+  h+=r.p.length?r.p.map(function(x){return '<div class="checkline bad">❌ '+esc(x)+"</div>";}).join("")
+    :'<div class="checkline ok">✅ 无阻断性错误</div>';
+  r.w.forEach(function(x){h+='<div class="checkline mut">⚠️ '+esc(x)+"</div>";});
+  var resN=Object.keys(ASSETS).length;
+  h+='<div class="checkline '+(resN?"ok":"mut")+'">'+(resN?"🧩 含 "+resN+" 个替换素材":"🧩 未替换素材（仅更新数据）")+"</div>";
+  $("pbChecks").innerHTML=h;
+}
+$("pbDlWords").onclick=function(){
+  if(!DB.words4){toast("请先加载词库",true);return;}
+  if(runChecks().p.length&&!confirm("存在错误，仍要导出吗？"))return;
+  download("words.js","\ufeff"+serializeWords(),"text/javascript;charset=utf-8");
+};
+$("pbDlGame").onclick=function(){
+  if(!DB.monsters){toast("请先加载游戏配置",true);return;}
+  if(runChecks().p.length&&!confirm("存在错误，仍要导出吗？"))return;
+  download("gamedata.js","\ufeff"+serializeGame(),"text/javascript;charset=utf-8");
+};
+$("pbDlZip").onclick=function(){
+  if(!DB.words4||!DB.monsters){toast("请先加载两个数据文件",true);return;}
+  var r=runChecks();
+  if(r.p.length&&!confirm("存在 "+r.p.length+" 个错误，仍要打包吗？"))return;
+  var files=[
+    {name:"assets/data/words.js",u8:strU8(serializeWords())},
+    {name:"assets/data/gamedata.js",u8:strU8(serializeGame())}
+  ];
+  Object.keys(ASSETS).forEach(function(p){files.push({name:p,u8:ASSETS[p].u8});});
+  files.push({name:"使用说明.txt",u8:strU8(
+    "杨梦婷给我学英语 · 更新包\n\n"+
+    "本包内容：\n"+files.slice(0,-1).map(function(f){return "  - "+f.name+"  ("+f.u8.length+" 字节)";}).join("\n")+
+    "\n\n打包方法（电脑需 Python3）：\n"+
+    "  python3 repack.py 原版游戏.apk update_pack.zip wordhunter.jks\n"+
+    "生成 游戏_后台改版.apk，签名与原版一致，可直接覆盖安装。\n"+
+    "\n或直接把本 zip 发回给制作方替换出包。\n")});
+  download("update_pack.zip",buildZip(files),"application/zip");
+  toast("更新包已生成，共 "+files.length+" 个文件");
+};
+
+/* ================= 云端发布（Cloudflare Worker → GitHub） ================= */
+var CFURL_KEY = "wh_admin_cfurl";
+var CFVER_KEY = "wh_admin_cfver";
+function cfUrl(){ try{ return (localStorage.getItem(CFURL_KEY)||"").trim().replace(/\/+$/,""); }catch(e){ return ""; } }
+function cfSetStatus(msg,bad){ var s=$("cfStatus"); s.textContent=msg; s.className="mut "+(bad?"bad":"ok"); }
+(function(){
+  try{
+    $("cfUrl").value = cfUrl() || "https://proud-cell-aeab.goddenapplegarthkn215.workers.dev/";
+    var lv = parseInt(localStorage.getItem(CFVER_KEY)||"0",10);
+    $("cfVer").value = lv>0 ? lv+1 : 3;
+  }catch(e){}
+})();
+$("cfUrl").oninput=function(){ try{ localStorage.setItem(CFURL_KEY, $("cfUrl").value.trim()); }catch(e){} };
+$("btnCloudTest").onclick=function(){
+  var u=cfUrl(); if(!u){ toast("请先填写 Worker 地址",true); return; }
+  cfSetStatus("测试中…",false);
+  fetch(u,{method:"GET"}).then(function(r){return r.json();}).then(function(j){
+    if(j&&j.service==="wordhunter-publisher"){ cfSetStatus("✅ 连接成功（Worker 正常）",false); }
+    else{ cfSetStatus("⚠️ 地址通了但不是本应用的 Worker",true); }
+  }).catch(function(e){ cfSetStatus("❌ 连接失败："+e.message,true); });
+};
+$("btnCloudPub").onclick=function(){
+  if(!DB.words4||!DB.monsters){ toast("请先加载词库和游戏配置",true); return; }
+  var u=cfUrl(); if(!u){ toast("请先填写 Worker 地址",true); return; }
+  var ver=parseInt($("cfVer").value,10); if(!ver||ver<1){ toast("版本号无效",true); return; }
+  var pwd=$("cfPwd").value; if(!pwd){ toast("请填写发布口令",true); return; }
+  var r=runChecks();
+  if(r.p.length && !confirm("存在 "+r.p.length+" 个错误，仍要发布吗？")) return;
+  var words=serializeWords();
+  var game=serializeGame().replace(/window\.DATA_VERSION\s*=\s*[0-9]+\s*;/g,"");
+  game="window.DATA_VERSION = "+ver+";\n"+game;
+  var payload={ password:pwd, dataVersion:ver, notes:$("cfNotes").value.trim(), words:words, gamedata:game };
+  cfSetStatus("发布中…",false);
+  fetch(u,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)})
+    .then(function(r){ return r.json().then(function(j){ return {s:r.status,j:j}; }); })
+    .then(function(o){
+      if(o.j && o.j.ok){
+        var vv=o.j.version||ver;
+        try{ localStorage.setItem(CFVER_KEY,String(vv)); }catch(e){}
+        $("cfVer").value=vv+1;
+        cfSetStatus("✅ 已发布 v"+vv+"（"+(o.j.files||[]).length+" 个文件）",false);
+        toast("发布成功，用户手机上很快就能检查到更新");
+      }else{
+        cfSetStatus("❌ "+((o.j&&o.j.error)?o.j.error:"HTTP "+o.s),true);
+      }
+    }).catch(function(e){ cfSetStatus("❌ 请求失败："+e.message,true); });
+};
+
+/* ================= Tab 切换 ================= */
+document.querySelectorAll("nav button").forEach(function(b){
+  b.onclick=function(){
+    document.querySelectorAll("nav button").forEach(function(x){x.classList.remove("on");});
+    b.classList.add("on");
+    document.querySelectorAll(".page").forEach(function(p){p.classList.remove("on");});
+    $("page-"+b.dataset.p).classList.add("on");
+    if(b.dataset.p==="words")renderWords();
+    if(b.dataset.p==="game")renderGame();
+    if(b.dataset.p==="save")renderSav();
+    if(b.dataset.p==="res")renderRes();
+    if(b.dataset.p==="pub")renderPub();
+  };
+});
+
+/* ================= 启动：自动加载 ================= */
+function boot(){
+  // 1) 浏览器本地草稿优先
+  var draft=null;
+  try{draft=JSON.parse(localStorage.getItem(AUTOKEY)||"null");}catch(e){}
+  if(draft&&draft.d&&draft.d.words4&&draft.d.monsters){
+    DB=draft.d; renderGameCounts();renderWords();renderGame();renderRes();refreshHeader();
+    return;
+  }
+  // 2) <script src="data/*.js"> 已加载的全局变量（双击 file:// 打开，或 http 均可）
+  if(applyWordsGlobal()&&applyGameGlobal()){
+    renderGameCounts();renderWords();renderGame();renderRes();refreshHeader();
+    return;
+  }
+  // 3) fetch 兜底（http 打开且 <script> 因故没加载到时）
+  Promise.all(["words.js","gamedata.js"].map(function(u){
+    return fetch(u).then(function(r){if(!r.ok)throw new Error(u);return r.text();}).catch(function(){return null;});
+  })).then(function(rs){
+    try{if(rs[0])applyWordsText(rs[0]);}catch(e){}
+    try{if(rs[1])applyGameText(rs[1]);}catch(e){}
+    if(DB.words4){renderGameCounts();renderWords();renderGame();renderRes();refreshHeader();}
+    else{renderWords();renderGame();refreshHeader();}
+  });
+}
+boot();
+</script>
+</body>
+</html>
