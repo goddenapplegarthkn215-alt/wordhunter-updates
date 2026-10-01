@@ -223,8 +223,8 @@ box-shadow:0 20px 60px rgba(0,0,0,.5);text-align:center}
     <div class="card" style="background:var(--panel2);margin-top:14px">
       <h2>🛰️ 云端发布 · 一键推送给用户</h2>
       <div class="grid" style="margin-bottom:10px">
-        <label class="f full">Cloudflare Worker 地址
-          <input id="cfUrl" placeholder="https://你的worker.workers.dev" autocomplete="off"></label>
+        <label class="f full">GitHub 令牌（Token，需勾 repo 权限）
+          <input id="ghToken" type="password" placeholder="ghp_..." autocomplete="off"></label>
         <label class="f">新数据版本号 <input type="number" id="cfVer" min="3" value="3"></label>
         <label class="f">发布口令 <input type="password" id="cfPwd" placeholder="和后台登录密码一致" autocomplete="current-password"></label>
         <label class="f full">更新说明（会显示给用户）
@@ -235,7 +235,7 @@ box-shadow:0 20px 60px rgba(0,0,0,.5);text-align:center}
         <button class="btn" id="btnCloudTest">测试连接</button>
         <span class="mut" id="cfStatus"></span>
       </div>
-      <div class="asst">发布后 GitHub Pages 会自动更新（约 1～2 分钟生效）。用户下次打开 App 看到「发现新内容」点更新即可，无需重装。</div>
+      <div class="asst">令牌只保存在你自己的手机浏览器里（不会上传、不写进代码）。发布后 GitHub Pages 会自动更新（约 1～2 分钟生效），用户下次打开 App 点「发现新内容」即可更新，无需重装。</div>
     </div>
     <div class="asst">
       出包方式：<br>
@@ -996,52 +996,122 @@ $("pbDlZip").onclick=function(){
   toast("更新包已生成，共 "+files.length+" 个文件");
 };
 
-/* ================= 云端发布（Cloudflare Worker → GitHub） ================= */
-var CFURL_KEY = "wh_admin_cfurl";
+/* ================= 云端发布（直接调用 GitHub API，无需 Cloudflare） ================= */
+var GH_USER = "goddenapplegarthkn215-alt";
+var GH_REPO = "wordhunter-updates";
+var GH_BRANCH = "main";
+var GH_PREFIX = "";
+var GHTOKEN_KEY = "wh_admin_ghtoken";
 var CFVER_KEY = "wh_admin_cfver";
-function cfUrl(){ try{ return (localStorage.getItem(CFURL_KEY)||"").trim().replace(/\/+$/,""); }catch(e){ return ""; } }
+
+function ghToken(){ try{ return (localStorage.getItem(GHTOKEN_KEY)||"").trim(); }catch(e){ return ""; } }
 function cfSetStatus(msg,bad){ var s=$("cfStatus"); s.textContent=msg; s.className="mut "+(bad?"bad":"ok"); }
+
+function base64utf8(str){
+  var bytes = new TextEncoder().encode(str);
+  var bin = "";
+  var CHUNK = 0x8000;
+  for(var i=0;i<bytes.length;i+=CHUNK){ bin += String.fromCharCode.apply(null, bytes.subarray(i, i+CHUNK)); }
+  return btoa(bin);
+}
+function ghApi(path, opts){
+  var tk = ghToken();
+  if(!tk) return Promise.reject(new Error("未填写令牌"));
+  opts = opts || {};
+  opts.headers = Object.assign({
+    "Authorization": "Bearer " + tk,
+    "Accept": "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28"
+  }, opts.headers || {});
+  return fetch("https://api.github.com" + path, opts);
+}
+
 (function(){
+  try{ $("ghToken").value = ghToken(); }catch(e){}
   try{
-    $("cfUrl").value = cfUrl() || "https://proud-cell-aeab.goddenapplegarthkn215.workers.dev/";
     var lv = parseInt(localStorage.getItem(CFVER_KEY)||"0",10);
     $("cfVer").value = lv>0 ? lv+1 : 3;
   }catch(e){}
 })();
-$("cfUrl").oninput=function(){ try{ localStorage.setItem(CFURL_KEY, $("cfUrl").value.trim()); }catch(e){} };
+$("ghToken").oninput=function(){ try{ localStorage.setItem(GHTOKEN_KEY, $("ghToken").value.trim()); }catch(e){} };
+
 $("btnCloudTest").onclick=function(){
-  var u=cfUrl(); if(!u){ toast("请先填写 Worker 地址",true); return; }
+  if(!ghToken()){ toast("请先填写 GitHub 令牌",true); return; }
   cfSetStatus("测试中…",false);
-  fetch(u,{method:"GET"}).then(function(r){return r.json();}).then(function(j){
-    if(j&&j.service==="wordhunter-publisher"){ cfSetStatus("✅ 连接成功（Worker 正常）",false); }
-    else{ cfSetStatus("⚠️ 地址通了但不是本应用的 Worker",true); }
-  }).catch(function(e){ cfSetStatus("❌ 连接失败："+e.message,true); });
+  ghApi("/user").then(function(r){
+    if(r.status>=400){
+      return r.json().then(function(j){ throw new Error((j&&j.message)||("HTTP "+r.status)); });
+    }
+    return r.json();
+  }).then(function(j){
+    cfSetStatus("✅ 连接成功，已登录："+j.login,false);
+  }).catch(function(e){
+    cfSetStatus("❌ "+(e && e.message ? e.message : "连接失败"),true);
+  });
 };
+
+function buildManifest(v, notes){
+  return "/* 更新清单 manifest.js */\nwindow.__WORDHUNTER_MANIFEST__ = {\n  dataVersion: "+v+",\n  notes: "+qstr(notes||"")+",\n  files: [\n    { name: \"词库\", url: \"words.js\" },\n    { name: \"游戏数据\", url: \"gamedata.js\" }\n  ]\n};\n";
+}
+
 $("btnCloudPub").onclick=function(){
   if(!DB.words4||!DB.monsters){ toast("请先加载词库和游戏配置",true); return; }
-  var u=cfUrl(); if(!u){ toast("请先填写 Worker 地址",true); return; }
+  if(!ghToken()){ toast("请先填写 GitHub 令牌",true); return; }
   var ver=parseInt($("cfVer").value,10); if(!ver||ver<1){ toast("版本号无效",true); return; }
-  var pwd=$("cfPwd").value; if(!pwd){ toast("请填写发布口令",true); return; }
+  var pwd=$("cfPwd").value;
+  if(!pwd || sha256hex(LOGIN_SALT+":"+pwd) !== LOGIN_HASH){ toast("发布口令错误",true); return; }
   var r=runChecks();
   if(r.p.length && !confirm("存在 "+r.p.length+" 个错误，仍要发布吗？")) return;
-  var words=serializeWords();
-  var game=serializeGame().replace(/window\.DATA_VERSION\s*=\s*[0-9]+\s*;/g,"");
-  game="window.DATA_VERSION = "+ver+";\n"+game;
-  var payload={ password:pwd, dataVersion:ver, notes:$("cfNotes").value.trim(), words:words, gamedata:game };
-  cfSetStatus("发布中…",false);
-  fetch(u,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)})
-    .then(function(r){ return r.json().then(function(j){ return {s:r.status,j:j}; }); })
-    .then(function(o){
-      if(o.j && o.j.ok){
-        var vv=o.j.version||ver;
-        try{ localStorage.setItem(CFVER_KEY,String(vv)); }catch(e){}
-        $("cfVer").value=vv+1;
-        cfSetStatus("✅ 已发布 v"+vv+"（"+(o.j.files||[]).length+" 个文件）",false);
-        toast("发布成功，用户手机上很快就能检查到更新");
-      }else{
-        cfSetStatus("❌ "+((o.j&&o.j.error)?o.j.error:"HTTP "+o.s),true);
-      }
-    }).catch(function(e){ cfSetStatus("❌ 请求失败："+e.message,true); });
+
+  var gamedata = serializeGame().replace(/window\.DATA_VERSION\s*=\s*[0-9]+\s*;/g,"");
+  gamedata = "window.DATA_VERSION = "+ver+";\n"+gamedata;
+  var files = [
+    { name:"manifest.js", content: buildManifest(ver, $("cfNotes").value.trim()) },
+    { name:"words.js",     content: serializeWords() },
+    { name:"gamedata.js",  content: gamedata }
+  ];
+
+  cfSetStatus("发布中（"+files.length+" 个文件）…",false);
+
+  var chain = Promise.resolve(), done = [];
+  files.forEach(function(f){
+    chain = chain.then(function(){
+      var filePath = GH_PREFIX + f.name;
+      var sha = null;
+      return ghApi("/repos/"+GH_USER+"/"+GH_REPO+"/contents/"+filePath+"?ref="+GH_BRANCH)
+        .then(function(r){
+          if(r.status===200) return r.json().then(function(j){ sha=j.sha; });
+          return null;
+        })
+        .catch(function(){ return null; })
+        .then(function(){
+          return ghApi("/repos/"+GH_USER+"/"+GH_REPO+"/contents/"+filePath, {
+            method:"PUT",
+            body: JSON.stringify({
+              message: "云端发布 v"+ver+"："+f.name,
+              content: base64utf8(f.content),
+              branch: GH_BRANCH,
+              sha: sha || undefined
+            })
+          });
+        })
+        .then(function(r){
+          if(r.status>=400){
+            return r.json().then(function(j){ throw new Error(f.name+"："+((j&&j.message)||("HTTP "+r.status))); });
+          }
+          done.push(f.name);
+        });
+    });
+  });
+
+  chain.then(function(){
+    try{ localStorage.setItem(CFVER_KEY, String(ver)); }catch(e){}
+    $("cfVer").value = ver+1;
+    cfSetStatus("✅ 已发布 v"+ver+"（"+done.length+" 个文件）",false);
+    toast("发布成功，用户手机上很快就能检查到更新");
+  }).catch(function(e){
+    cfSetStatus("❌ "+(e && e.message ? e.message : "发布失败"),true);
+  });
 };
 
 /* ================= Tab 切换 ================= */
