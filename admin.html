@@ -205,6 +205,7 @@ code{background:#eef2ff;padding:1px 6px;border-radius:6px;color:#4f46e5;font-siz
   <button data-p="dash" class="on">🏠 总览</button>
   <button data-p="words">📖 词库</button>
   <button data-p="game">⚔️ 游戏</button>
+  <button data-p="rules">🎛️ 规则</button>
   <button data-p="save">💾 存档</button>
   <button data-p="res">🖼️ 素材</button>
   <button data-p="pub">🚀 发布</button>
@@ -276,6 +277,19 @@ code{background:#eef2ff;padding:1px 6px;border-radius:6px;color:#4f46e5;font-siz
   </div>
 </section>
 
+<!-- ================= 游戏规则 ================= -->
+<section class="page" id="page-rules">
+  <div class="card">
+    <h2>🎛️ 游戏规则 <span class="cnt">改数字即可调整玩法平衡，无需重新打包</span></h2>
+    <div class="row" style="margin-bottom:14px">
+      <button class="btn pri" id="btnRulesSave">💾 保存规则</button>
+      <button class="btn" id="btnRulesReset">↩️ 恢复默认</button>
+      <span class="mut" style="flex:1">改完点「保存」，再到「🚀 发布」一键推送；App 检测到新版本后自动生效。</span>
+    </div>
+    <div id="rulesList"></div>
+  </div>
+</section>
+
 <!-- ================= 存档 ================= -->
 <section class="page" id="page-save">
   <div class="card">
@@ -343,8 +357,10 @@ code{background:#eef2ff;padding:1px 6px;border-radius:6px;color:#4f46e5;font-siz
   <div class="card">
     <h2>🛰️ 云端发布 · 一键推送给用户</h2>
     <div class="grid" style="margin-bottom:12px">
-      <label class="f full">GitHub 令牌（Token，需勾 repo 权限）
-        <input id="ghToken" type="password" placeholder="ghp_..." autocomplete="off"></label>
+      <label class="f full">Gitee 令牌（私人令牌，需勾选 projects 权限）
+        <input id="ghToken" type="password" placeholder="粘贴 Gitee 私人令牌" autocomplete="off"></label>
+      <label class="f full">GitHub 令牌（备用源同步用，不填则只发 Gitee）
+        <input id="ghTokenGithub" type="password" placeholder="粘贴 GitHub 私人令牌（可选）" autocomplete="off"></label>
       <label class="f">新数据版本号 <input type="number" id="cfVer" min="3" value="3"></label>
       <label class="f">发布口令 <input type="password" id="cfPwd" placeholder="和登录密码一致" autocomplete="current-password"></label>
       <label class="f full">更新说明（会显示给用户）
@@ -352,10 +368,11 @@ code{background:#eef2ff;padding:1px 6px;border-radius:6px;color:#4f46e5;font-siz
     </div>
     <div class="row">
       <button class="btn pri" id="btnCloudPub">🚀 一键发布</button>
-      <button class="btn" id="btnCloudTest">测试连接</button>
+      <button class="btn" id="btnCloudTest">测试 Gitee</button>
+      <button class="btn" id="btnCloudTestGh">测试 GitHub</button>
     </div>
     <div class="checkline mut" id="cfStatus" style="margin-top:10px">尚未测试连接</div>
-    <div class="asst">令牌只保存在你自己的手机浏览器里（不会上传、不写进代码）。发布后 GitHub Pages 会自动更新（约 1～2 分钟生效），用户下次打开 App 点「发现新内容」即可更新，无需重装。</div>
+    <div class="asst">令牌只保存在你自己的手机浏览器里（不会上传、不写进代码）。填了 GitHub 令牌后，「一键发布」会同时写入 Gitee 和 GitHub 两个仓库（挂梯子/不挂梯子都能更新）；不填则只发 Gitee。发布后用户打开 App 点「发现新内容」即可更新，无需重装。</div>
   </div>
 
   <div class="card">
@@ -377,7 +394,7 @@ code{background:#eef2ff;padding:1px 6px;border-radius:6px;color:#4f46e5;font-siz
 <script>
 "use strict";
 /* ================= 全局状态 ================= */
-var DB = { words4:null, words6new:null, monsters:null, equip:null, tasks:null, ach:null,
+var DB = { words4:null, words6new:null, monsters:null, equip:null, tasks:null, ach:null, rules:null,
            rarColors:null, rarNames:null, levelTail:"", wordsHeader:"", gameHeader:"", dataVersion:0 };
 var ASSETS = {};   // 路径 -> {name, u8, dataUrl, size}
 var AUTOKEY = "wh_admin_draft_v1";
@@ -522,6 +539,7 @@ function applyGameText(text){
   DB.tasks=sb.DAILY_TASKS||[]; DB.ach=sb.ACHIEVEMENTS||[];
   DB.rarColors=sb.RARITY_COLORS||{}; DB.rarNames=sb.RARITY_NAMES||{};
   DB.dataVersion=sb.DATA_VERSION||0;
+  DB.rules=mergeRules(sb.GAME_RULES);
   var m=text.match(/^([\s\S]*?)window\.MONSTERS/); DB.gameHeader=m?m[1]:"";
   DB.ach.forEach(function(a){ if(typeof a.cond==="function") a.condExpr=fnToExpr(a.cond); });
 }
@@ -547,6 +565,7 @@ function applyGameGlobal(){
   DB.rarColors=window.RARITY_COLORS||{};DB.rarNames=window.RARITY_NAMES||{};
   DB.gameHeader="";
   DB.dataVersion=window.DATA_VERSION||0;
+  DB.rules=mergeRules(window.GAME_RULES);
   DB.ach.forEach(function(a){if(typeof a.cond==="function")a.condExpr=fnToExpr(a.cond);});
   return true;
 }
@@ -860,6 +879,74 @@ function editRarity(k){
   };
 }
 
+/* ================= 游戏规则编辑 ================= */
+var DEFAULT_RULES = {
+  proficiency: { max: 5, masterAt: 3, gainCorrect: 1, loseWrong: 1 },
+  hero:        { baseHp: 120, baseAtk: 10, baseCrit: 0.08, critMax: 0.75 },
+  stages:      { total: 50, wordsPerStage: 20 },
+  sign:        { base: 20, perStreak: 5, streakCap: 7 },
+  battle:      { comboStep: 0.12, comboCap: 0.8, critMul: 2.2,
+                 jitterMin: 0.92, jitterMax: 1.08, foeJitterMin: 0.85, foeJitterMax: 1.15 },
+  reward:      { accFactor: 1, comboFactor: 0.04, comboCap: 0.5, noDamage: 0.4 },
+  quiz:        { batchSize: 10, meaningRatio: 0.6 }
+};
+function mergeRules(src){
+  var out={};
+  Object.keys(DEFAULT_RULES).forEach(function(sec){
+    out[sec]={};
+    var d=DEFAULT_RULES[sec], o=(src&&src[sec])||{};
+    Object.keys(d).forEach(function(k){
+      out[sec][k]=(typeof o[k]==="number")?o[k]:d[k];
+    });
+  });
+  return out;
+}
+var RULE_SCHEMA = {
+  proficiency:{icon:"🧠",title:"熟练度 / 掌握判定",desc:"控制单词学到什么程度算「已掌握」，以及答对答错对熟练度的影响。",
+    fields:[["max","熟练度上限","num"],["masterAt","达到即算已学（阈值）","num"],["gainCorrect","答对 +熟练度","num"],["loseWrong","答错 -熟练度","num"]]},
+  hero:{icon:"🦸",title:"主角基础属性",desc:"战斗开始时主角的基础血量、攻击、暴击率与暴击上限。",
+    fields:[["baseHp","初始血量","num"],["baseAtk","初始攻击","num"],["baseCrit","初始暴击率(0.08=8%)","num"],["critMax","暴击率上限(0.75=75%)","num"]]},
+  stages:{icon:"🗺️",title:"关卡解锁",desc:"关卡推进节奏：每掌握多少词开一关、总共多少关。",
+    fields:[["total","总关卡数","num"],["wordsPerStage","每关需掌握词数","num"]]},
+  sign:{icon:"📅",title:"每日签到奖励",desc:"连续签到的奖励分规则。",
+    fields:[["base","基础奖励分","num"],["perStreak","连续每天 +分","num"],["streakCap","连续签到加成上限(天)","num"]]},
+  battle:{icon:"⚔️",title:"战斗数值",desc:"连击与暴击倍率、双方伤害的随机波动范围（1=100%）。",
+    fields:[["comboStep","每连击伤害加成步进","num"],["comboCap","连击加成上限","num"],["critMul","暴击伤害倍率","num"],["jitterMin","我方伤害波动下限","num"],["jitterMax","我方伤害波动上限","num"],["foeJitterMin","怪物伤害波动下限","num"],["foeJitterMax","怪物伤害波动上限","num"]]},
+  reward:{icon:"💰",title:"战斗奖励结算",desc:"胜场奖励的计算系数。",
+    fields:[["accFactor","正确率奖励系数","num"],["comboFactor","每连击奖励分","num"],["comboCap","连击奖励上限","num"],["noDamage","无伤通关奖励(比例)","num"]]},
+  quiz:{icon:"❓",title:"出题方式",desc:"每场战斗出几道题，以及考「看英文选释义」的比例（其余考拼写）。",
+    fields:[["batchSize","每战出题数","num"],["meaningRatio","考释义比例(0.6=60%)","num"]]}
+};
+function renderRules(){
+  if(!DB.rules)DB.rules=mergeRules(null);
+  var R=DB.rules;
+  $("rulesList").innerHTML=Object.keys(RULE_SCHEMA).map(function(sec){
+    var def=RULE_SCHEMA[sec], vals=R[sec]||{};
+    return '<div class="gcard"><div class="gc-head">'+
+      '<span class="gc-ico">'+def.icon+'</span><b>'+def.title+'</b>'+
+      '<span class="tag">'+esc(sec)+'</span></div>'+
+      '<div class="gc-desc">'+def.desc+'</div>'+
+      '<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px">'+
+      def.fields.map(function(f){
+        var v=(vals[f[0]]!=null)?vals[f[0]]:"";
+        return '<label class="f">'+f[1]+'<input type="number" step="any" data-sec="'+sec+'" data-key="'+f[0]+'" value="'+esc(v)+'"></label>';
+      }).join("")+'</div></div>';
+  }).join("");
+}
+$("btnRulesSave").onclick=function(){
+  if(!DB.rules)DB.rules=mergeRules(null);
+  document.querySelectorAll("#rulesList input[data-sec]").forEach(function(i){
+    DB.rules[i.dataset.sec]=DB.rules[i.dataset.sec]||{};
+    DB.rules[i.dataset.sec][i.dataset.key]=num(i.value);
+  });
+  autosave();renderRules();toast("✅ 规则已保存，发布后生效");
+};
+$("btnRulesReset").onclick=function(){
+  if(!confirm("恢复为内置默认规则？"))return;
+  DB.rules=mergeRules(null);
+  autosave();renderRules();toast("已恢复默认规则");
+};
+
 /* ================= 序列化输出 ================= */
 function jsWord(w){
   var order=["w","p","m","ph","e","t"], parts=[];
@@ -906,7 +993,26 @@ function serializeGame(){
       return "  { id:"+qstr(o.id)+", name:"+qstr(o.name)+", icon:"+qstr(o.icon)+", desc:"+qstr(o.desc)+
              ", reward:"+num(o.reward)+", cond: s => ("+o.condExpr+") }";
     }).join(",\n")+"\n];\n";
+  out += serializeRules();
   return out;
+}
+function serializeRules(){
+  var R=DB.rules||mergeRules(null);
+  var secs=Object.keys(RULE_SCHEMA);
+  var maxLen=secs.reduce(function(m,s){return Math.max(m,s.length);},0);
+  var lines=secs.map(function(sec){
+    var def=RULE_SCHEMA[sec], vals=R[sec]||{};
+    var pairs=def.fields.map(function(f){
+      var v=vals[f[0]];
+      var nv=(typeof v==="number")?v:num(DEFAULT_RULES[sec][f[0]]);
+      return f[0]+": "+nv;
+    }).join(", ");
+    return "  "+sec+":"+new Array(maxLen-sec.length+1).join(" ")+" { "+pairs+" }";
+  });
+  return "\n/* ============================================================\n"+
+    " * 游戏规则（可在后台调整，随发布覆盖到 App，改数字即可调玩法平衡）\n"+
+    " * ============================================================ */\nwindow.GAME_RULES = {\n"+
+    lines.join(",\n")+"\n};\n";
 }
 
 /* ================= 存档页 ================= */
@@ -1156,15 +1262,20 @@ $("pbDlZip").onclick=function(){
   toast("更新包已生成，共 "+files.length+" 个文件");
 };
 
-/* ================= 云端发布（直接调用 GitHub API，无需 Cloudflare） ================= */
-var GH_USER = "goddenapplegarthkn215-alt";
+/* ================= 云端发布（直接调用 Gitee API） ================= */
+var GH_USER = "lsjymt";
 var GH_REPO = "wordhunter-updates";
-var GH_BRANCH = "main";
+var GH_BRANCH = "master";
 var GH_PREFIX = "";
 var GHTOKEN_KEY = "wh_admin_ghtoken";
 var CFVER_KEY = "wh_admin_cfver";
+var GITHUB_USER = "goddenapplegarthkn215-alt";
+var GITHUB_REPO = "wordhunter-updates";
+var GITHUB_BRANCH = "main";
+var GITHUB_TOKEN_KEY = "wh_admin_ghtoken_github";
 
 function ghToken(){ try{ return (localStorage.getItem(GHTOKEN_KEY)||"").trim(); }catch(e){ return ""; } }
+function githubToken(){ try{ return (localStorage.getItem(GITHUB_TOKEN_KEY)||"").trim(); }catch(e){ return ""; } }
 function cfSetStatus(msg,bad){ var s=$("cfStatus"); s.textContent=msg; s.className="checkline "+(bad?"bad":"ok"); s.style.marginTop="10px"; }
 
 function base64utf8(str){
@@ -1178,25 +1289,31 @@ function ghApi(path, opts){
   var tk = ghToken();
   if(!tk) return Promise.reject(new Error("未填写令牌"));
   opts = opts || {};
-  opts.headers = Object.assign({
-    "Authorization": "Bearer " + tk,
-    "Accept": "application/vnd.github+json",
-    "X-GitHub-Api-Version": "2022-11-28"
-  }, opts.headers || {});
+  path += (path.indexOf("?") >= 0 ? "&" : "?") + "access_token=" + encodeURIComponent(tk);
+  opts.headers = Object.assign({"Accept": "application/json"}, opts.headers || {});
+  return fetch("https://gitee.com/api/v5" + path, opts);
+}
+function githubApi(path, opts){
+  var tk = githubToken();
+  if(!tk) return Promise.reject(new Error("未填写 GitHub 令牌"));
+  opts = opts || {};
+  opts.headers = Object.assign({"Accept": "application/vnd.github+json", "Authorization": "Bearer " + tk}, opts.headers || {});
   return fetch("https://api.github.com" + path, opts);
 }
 
 (function(){
   try{ $("ghToken").value = ghToken(); }catch(e){}
+  try{ $("ghTokenGithub").value = githubToken(); }catch(e){}
   try{
     var lv = parseInt(localStorage.getItem(CFVER_KEY)||"0",10);
     $("cfVer").value = lv>0 ? lv+1 : 3;
   }catch(e){}
 })();
 $("ghToken").oninput=function(){ try{ localStorage.setItem(GHTOKEN_KEY, $("ghToken").value.trim()); }catch(e){} };
+$("ghTokenGithub").oninput=function(){ try{ localStorage.setItem(GITHUB_TOKEN_KEY, $("ghTokenGithub").value.trim()); }catch(e){} };
 
 $("btnCloudTest").onclick=function(){
-  if(!ghToken()){ toast("请先填写 GitHub 令牌",true); return; }
+  if(!ghToken()){ toast("请先填写 Gitee 令牌",true); return; }
   cfSetStatus("测试中…",false);
   ghApi("/user").then(function(r){
     if(r.status>=400){
@@ -1210,13 +1327,28 @@ $("btnCloudTest").onclick=function(){
   });
 };
 
+$("btnCloudTestGh").onclick=function(){
+  if(!githubToken()){ toast("请先填写 GitHub 令牌",true); return; }
+  cfSetStatus("测试 GitHub 中…",false);
+  githubApi("/user").then(function(r){
+    if(r.status>=400){
+      return r.json().then(function(j){ throw new Error((j&&j.message)||("HTTP "+r.status)); });
+    }
+    return r.json();
+  }).then(function(j){
+    cfSetStatus("✅ GitHub 连接成功，已登录："+j.login,false);
+  }).catch(function(e){
+    cfSetStatus("❌ GitHub "+(e && e.message ? e.message : "连接失败"),true);
+  });
+};
+
 function buildManifest(v, notes){
   return "/* 更新清单 manifest.js */\nwindow.__WORDHUNTER_MANIFEST__ = {\n  dataVersion: "+v+",\n  notes: "+qstr(notes||"")+",\n  files: [\n    { name: \"词库\", url: \"words.js\" },\n    { name: \"游戏数据\", url: \"gamedata.js\" }\n  ]\n};\n";
 }
 
 $("btnCloudPub").onclick=function(){
   if(!DB.words4||!DB.monsters){ toast("请先加载词库和游戏配置",true); return; }
-  if(!ghToken()){ toast("请先填写 GitHub 令牌",true); return; }
+  if(!ghToken()){ toast("请先填写 Gitee 令牌",true); return; }
   var ver=parseInt($("cfVer").value,10); if(!ver||ver<1){ toast("版本号无效",true); return; }
   var pwd=$("cfPwd").value;
   if(!pwd || sha256hex(LOGIN_SALT+":"+pwd) !== LOGIN_HASH){ toast("发布口令错误",true); return; }
@@ -1233,42 +1365,65 @@ $("btnCloudPub").onclick=function(){
 
   cfSetStatus("发布中（"+files.length+" 个文件）…",false);
 
-  var chain = Promise.resolve(), done = [];
+  var gh_on = !!githubToken();          // 是否同时同步 GitHub 备用源
+  var chain = Promise.resolve(), done = [], ghErr = null;
+
+  function putGitee(f){
+    var filePath = GH_PREFIX + f.name;
+    var sha = null;
+    return ghApi("/repos/"+GH_USER+"/"+GH_REPO+"/contents/"+filePath+"?ref="+GH_BRANCH)
+      .then(function(r){ if(r.status===200) return r.json().then(function(j){ sha=j.sha; }); return null; })
+      .catch(function(){ return null; })
+      .then(function(){
+        return ghApi("/repos/"+GH_USER+"/"+GH_REPO+"/contents/"+filePath, {
+          method: sha ? "PUT" : "POST",
+          body: JSON.stringify({
+            message: "云端发布 v"+ver+"："+f.name,
+            content: base64utf8(f.content),
+            branch: GH_BRANCH,
+            sha: sha || undefined
+          })
+        });
+      })
+      .then(function(r){
+        if(r.status>=400) return r.json().then(function(j){ throw new Error("Gitee·"+f.name+"："+((j&&j.message)||("HTTP "+r.status))); });
+        done.push(f.name);
+      });
+  }
+
+  function putGithub(f){
+    if(!gh_on || ghErr) return Promise.resolve();
+    var fp = f.name, sha = null;
+    return githubApi("/repos/"+GITHUB_USER+"/"+GITHUB_REPO+"/contents/"+fp+"?ref="+GITHUB_BRANCH)
+      .then(function(r){ if(r.status===200) return r.json().then(function(j){ sha=j.sha; }); return null; })
+      .catch(function(){ return null; })
+      .then(function(){
+        var body = { message: "云端发布 v"+ver+"："+fp, content: base64utf8(f.content), branch: GITHUB_BRANCH };
+        if(sha) body.sha = sha;
+        return githubApi("/repos/"+GITHUB_USER+"/"+GITHUB_REPO+"/contents/"+fp, { method: "PUT", body: JSON.stringify(body) });
+      })
+      .then(function(r){
+        if(r.status>=400) return r.json().then(function(j){ throw new Error(fp+"："+((j&&j.message)||("HTTP "+r.status))); });
+      })
+      .catch(function(e){ if(!ghErr) ghErr = (e && e.message) || "GitHub 同步失败"; });
+  }
+
   files.forEach(function(f){
     chain = chain.then(function(){
-      var filePath = GH_PREFIX + f.name;
-      var sha = null;
-      return ghApi("/repos/"+GH_USER+"/"+GH_REPO+"/contents/"+filePath+"?ref="+GH_BRANCH)
-        .then(function(r){
-          if(r.status===200) return r.json().then(function(j){ sha=j.sha; });
-          return null;
-        })
-        .catch(function(){ return null; })
-        .then(function(){
-          return ghApi("/repos/"+GH_USER+"/"+GH_REPO+"/contents/"+filePath, {
-            method:"PUT",
-            body: JSON.stringify({
-              message: "云端发布 v"+ver+"："+f.name,
-              content: base64utf8(f.content),
-              branch: GH_BRANCH,
-              sha: sha || undefined
-            })
-          });
-        })
-        .then(function(r){
-          if(r.status>=400){
-            return r.json().then(function(j){ throw new Error(f.name+"："+((j&&j.message)||("HTTP "+r.status))); });
-          }
-          done.push(f.name);
-        });
+      return putGitee(f).then(function(){ return putGithub(f); });
     });
   });
 
   chain.then(function(){
     try{ localStorage.setItem(CFVER_KEY, String(ver)); }catch(e){}
     $("cfVer").value = ver+1;
-    cfSetStatus("✅ 已发布 v"+ver+"（"+done.length+" 个文件）",false);
-    toast("发布成功，用户手机上很快就能检查到更新");
+    if(gh_on && ghErr){
+      cfSetStatus("⚠️ Gitee 已发布 v"+ver+"，但 GitHub 备用源未同步："+ghErr, false);
+      toast("Gitee 已发布，GitHub 同步失败");
+    } else {
+      cfSetStatus("✅ 已发布 v"+ver+"（"+done.length+" 个文件"+(gh_on?"，双源已同步":"")+"），用户打开 App 检查更新即可生效",false);
+      toast("发布成功，用户打开 App 检查更新即可生效");
+    }
   }).catch(function(e){
     cfSetStatus("❌ "+(e && e.message ? e.message : "发布失败"),true);
   });
@@ -1309,6 +1464,7 @@ function goTab(p){
   if(p==="dash")renderDash();
   if(p==="words")renderWords();
   if(p==="game")renderGame();
+  if(p==="rules")renderRules();
   if(p==="save")renderSav();
   if(p==="res")renderRes();
   if(p==="pub")renderPub();
