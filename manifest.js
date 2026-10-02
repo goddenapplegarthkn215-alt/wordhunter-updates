@@ -2,10 +2,7 @@
 window.__WORDHUNTER_MANIFEST__ = {
   dataVersion: 3,
   notes: "v3：圣典立绘/头像修复 + 图片热更新（无需重装APK）",
-  files: [
-    { name: "词库", url: "words.js" },
-    { name: "游戏数据", url: "gamedata.js" }
-  ],
+  files: [],
   images: [
     { name: "立绘·素装", path: "img/outfits/plain.png", url: "img/outfits/plain.png" },
     { name: "立绘·蔚蓝", path: "img/outfits/azure.png", url: "img/outfits/azure.png" },
