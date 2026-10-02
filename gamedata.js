@@ -1,4 +1,4 @@
-window.DATA_VERSION = 8;
+window.DATA_VERSION = 9;
 /* 游戏数据（后台管理导出） */
 
 /* ---------- 怪物 ---------- */
