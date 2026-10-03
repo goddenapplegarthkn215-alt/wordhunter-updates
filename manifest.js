@@ -1,6 +1,6 @@
 /* 更新清单 manifest.js */
 window.__WORDHUNTER_MANIFEST__ = {
-  dataVersion: 9,
+  dataVersion: 10,
   notes: "",
   files: [
     { name: "词库", url: "words.js" },
