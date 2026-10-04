@@ -372,7 +372,25 @@ code{background:#eef2ff;padding:1px 6px;border-radius:6px;color:#4f46e5;font-siz
       <button class="btn" id="btnCloudTestGh">测试 GitHub</button>
     </div>
     <div class="checkline mut" id="cfStatus" style="margin-top:10px">尚未测试连接</div>
-    <div class="asst">令牌只保存在你自己的手机浏览器里（不会上传、不写进代码）。填了 GitHub 令牌后，「一键发布」会同时写入 Gitee 和 GitHub 两个仓库（挂梯子/不挂梯子都能更新）；不填则只发 Gitee。发布后用户打开 App 点「发现新内容」即可更新，无需重装。</div>
+    <div class="asst">令牌只保存在你自己的手机浏览器里（不会上传、不写进代码）。填了 GitHub 令牌后，「一键发布」会同时写入 Gitee 和 GitHub 两个仓库（挂梯子/不挂梯子都能更新）；不填则只发 Gitee。发布后用户打开 App 点「发现新内容」即可更新，无需重装。数据发布不会影响已配置的整包升级信息。</div>
+  </div>
+
+  <div class="card">
+    <h2>📲 整包升级发布 · APK 在线更新</h2>
+    <div class="grid" style="margin-bottom:12px">
+      <label class="f full">新版 APK 文件（≤100MB，文件名建议 wordhunter-版本名.apk）
+        <input type="file" id="apkFile" accept=".apk,application/vnd.android.package-archive"></label>
+      <label class="f">versionCode（整数，必须比上一版大）
+        <input type="number" id="apkVc" min="1" placeholder="如 31"></label>
+      <label class="f">版本名
+        <input id="apkVn" placeholder="如 1.6.6"></label>
+      <label class="f full">更新说明（会显示给用户，支持换行）
+        <textarea id="apkNotes" rows="3" placeholder="例如：1. 修复在线升级&#10;2. 细节优化" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);font:inherit;resize:vertical"></textarea></label>
+    </div>
+    <div class="row">
+      <button class="btn pri" id="btnApkPub">📲 发布整包</button>
+    </div>
+    <div class="checkline mut" id="apkStatus" style="margin-top:10px">选择 APK 后会自动计算大小和 SHA-256。整包仅发布到 GitHub 源（App 的在线升级走 GitHub），需要填写上方 GitHub 令牌。</div>
   </div>
 
   <div class="card">
@@ -1353,8 +1371,35 @@ $("btnCloudTestGh").onclick=function(){
   });
 };
 
-function buildManifest(v, notes){
-  return "/* 更新清单 manifest.js */\nwindow.__WORDHUNTER_MANIFEST__ = {\n  dataVersion: "+v+",\n  notes: "+qstr(notes||"")+",\n  files: [\n    { name: \"词库\", url: \"words.js\" },\n    { name: \"游戏数据\", url: \"gamedata.js\" }\n  ]\n};\n";
+/* apk 段本地备份键：即使临时拉不到线上 manifest，也不会丢整包配置 */
+var APKMETA_KEY = "wh_admin_apk_v1";
+function cachedApk(){
+  try{ return JSON.parse(localStorage.getItem(APKMETA_KEY)||"null"); }catch(e){ return null; }
+}
+function saveCachedApk(apk){
+  try{ localStorage.setItem(APKMETA_KEY, JSON.stringify(apk)); }catch(e){}
+}
+
+/* 读取线上当前 manifest（动态 script 方式，同 App 端解析一致） */
+function loadRemoteManifest(){
+  return new Promise(function(res){
+    var prev = window.__WORDHUNTER_MANIFEST__;
+    var s = document.createElement("script");
+    s.src = "https://"+GITHUB_USER+".github.io/"+GITHUB_REPO+"/manifest.js?z="+Date.now();
+    var done = function(m){ try{s.remove();}catch(e){} window.__WORDHUNTER_MANIFEST__=prev; res(m||null); };
+    s.onload = function(){ done(window.__WORDHUNTER_MANIFEST__||null); };
+    s.onerror = function(){ done(null); };
+    document.head.appendChild(s);
+  });
+}
+
+function buildManifest(v, notes, apk){
+  var out = "/* 更新清单 manifest.js */\nwindow.__WORDHUNTER_MANIFEST__ = {\n  dataVersion: "+v+",\n  notes: "+qstr(notes||"")+",\n  files: [\n    { name: \"词库\", url: \"words.js\" },\n    { name: \"游戏数据\", url: \"gamedata.js\" }\n  ]";
+  if(apk && parseInt(apk.versionCode,10)>0 && apk.url){
+    out += ",\n  apk: "+JSON.stringify(apk,null,2).replace(/\n/g,"\n  ")+"\n";
+  }
+  out += "};\n";
+  return out;
 }
 
 $("btnCloudPub").onclick=function(){
@@ -1366,15 +1411,23 @@ $("btnCloudPub").onclick=function(){
   var r=runChecks();
   if(r.p.length && !confirm("存在 "+r.p.length+" 个错误，仍要发布吗？")) return;
 
+  /* 发布数据前先读取线上 manifest，保留已配置的整包升级段（apk），避免被覆盖丢失 */
+  cfSetStatus("正在检查线上整包配置…",false);
+  loadRemoteManifest().then(function(remote){
+    var apk = (remote && remote.apk && parseInt(remote.apk.versionCode,10)>0) ? remote.apk : cachedApk();
+    proceed(apk);
+  });
+
+  function proceed(apk){
   var gamedata = serializeGame().replace(/window\.DATA_VERSION\s*=\s*[0-9]+\s*;/g,"");
   gamedata = "window.DATA_VERSION = "+ver+";\n"+gamedata;
   var files = [
-    { name:"manifest.js", content: buildManifest(ver, $("cfNotes").value.trim()) },
+    { name:"manifest.js", content: buildManifest(ver, $("cfNotes").value.trim(), apk) },
     { name:"words.js",     content: serializeWords() },
     { name:"gamedata.js",  content: gamedata }
   ];
 
-  cfSetStatus("发布中（"+files.length+" 个文件）…",false);
+  cfSetStatus("发布中（"+files.length+" 个文件"+(apk?"，含整包配置":"")+"）…",false);
 
   var gh_on = !!githubToken();          // 是否同时同步 GitHub 备用源
   var chain = Promise.resolve(), done = [], ghErr = null;
@@ -1438,7 +1491,130 @@ $("btnCloudPub").onclick=function(){
   }).catch(function(e){
     cfSetStatus("❌ "+(e && e.message ? e.message : "发布失败"),true);
   });
+  }
 };
+
+/* ============================================================
+ * 整包 APK 发布（仅 GitHub 源）
+ * 大文件走 Git Database API：blob → tree → commit → update ref
+ * ============================================================ */
+(function(){
+  var picked = null;   // {file, sha256}
+  function apkStatus(msg, bad){ var s=$("apkStatus"); s.textContent=msg; s.className="checkline "+(bad?"bad":"ok"); s.style.marginTop="10px"; }
+
+  function abToB64(buf){
+    // 分块转 base64，避免 String.fromCharCode.apply 栈溢出
+    var bytes = new Uint8Array(buf), bin = "", CHUNK = 0x8000;
+    for(var i=0;i<bytes.length;i+=CHUNK){ bin += String.fromCharCode.apply(null, bytes.subarray(i, i+CHUNK)); }
+    return btoa(bin);
+  }
+  function hexSha(buf){
+    return crypto.subtle.digest("SHA-256", buf).then(function(h){
+      return Array.prototype.map.call(new Uint8Array(h), function(b){ return ("00"+b.toString(16)).slice(-2); }).join("");
+    });
+  }
+  /* 带上传进度的 GitHub API 请求 */
+  function ghApiXhr(method, path, body, onProgress){
+    return new Promise(function(resolve, reject){
+      var x = new XMLHttpRequest();
+      x.open(method, "https://api.github.com"+path);
+      x.setRequestHeader("Accept","application/vnd.github+json");
+      x.setRequestHeader("Content-Type","application/json");
+      x.setRequestHeader("Authorization","Bearer "+githubToken());
+      x.upload.onprogress = function(e){ if(onProgress && e.lengthComputable) onProgress(e.loaded, e.total); };
+      x.onreadystatechange = function(){
+        if(x.readyState!==4) return;
+        if(x.status>=200 && x.status<300){ try{res(JSON.parse(x.responseText));}catch(e){res({});} }
+        else { var m="HTTP "+x.status; try{ m=JSON.parse(x.responseText).message||m; }catch(e){} reject(new Error(m)); }
+      };
+      x.onerror = function(){ reject(new Error("网络错误")); };
+      x.send(body||null);
+    });
+  }
+  function ghGet(path){ return githubApi(path,{}).then(function(r){ if(r.status>=400) return r.json().then(function(j){throw new Error(j.message||("HTTP "+r.status));}); return r.json(); }); }
+
+  $("apkFile").onchange = function(){
+    var f = this.files && this.files[0];
+    picked = null;
+    if(!f){ apkStatus("请选择 APK 文件",true); return; }
+    if(!/\.apk$/i.test(f.name)){ apkStatus("请选择 .apk 文件",true); return; }
+    if(f.size > 100*1024*1024){ apkStatus("文件超过 100MB，GitHub 不允许",true); return; }
+    var guess = f.name.match(/(\d+)\.(\d+)\.(\d+)/);
+    if(guess && !$("apkVn").value){ $("apkVn").value = guess[1]+"."+guess[2]+"."+guess[3]; }
+    apkStatus("正在计算 SHA-256…",false);
+    var buf;
+    f.arrayBuffer().then(function(b){ buf=b; return hexSha(b); }).then(function(sha){
+      picked = { file:f, buf:buf, sha256:sha };
+      apkStatus("已选择："+f.name+"（"+(f.size/1048576).toFixed(1)+" MB）SHA-256："+sha.slice(0,12)+"…，填好版本号后点发布",false);
+    }).catch(function(e){ apkStatus("读取文件失败："+e.message,true); });
+  };
+
+  $("btnApkPub").onclick = function(){
+    if(!githubToken()){ toast("请先填写上方 GitHub 令牌",true); return; }
+    if(!picked){ toast("请先选择 APK 文件",true); return; }
+    var vc = parseInt($("apkVc").value,10);
+    var vn = $("apkVn").value.trim();
+    if(!vc||vc<1){ toast("versionCode 无效（必须比上一版大）",true); return; }
+    if(!vn){ toast("请填写版本名",true); return; }
+    if(!confirm("发布整包 v"+vn+"（versionCode "+vc+"）到 GitHub？\n发布后已装旧版的用户启动 App 会收到升级提示。")) return;
+
+    var remoteName = "apk/wordhunter-"+vn+".apk";
+    var apkMeta = { versionCode: vc, versionName: vn, url: remoteName, size: picked.file.size, sha256: picked.sha256, notes: $("apkNotes").value.trim() };
+    $("btnApkPub").disabled = true;
+    apkStatus("①/④ 编码安装包…",false);
+
+    var b64;
+    Promise.resolve().then(function(){
+      b64 = abToB64(picked.buf);
+      apkStatus("②/④ 上传安装包（"+(picked.file.size/1048576).toFixed(1)+"MB），请耐心等待…",false);
+      return ghApiXhr("POST","/repos/"+GITHUB_USER+"/"+GITHUB_REPO+"/git/blobs",
+        JSON.stringify({content:b64, encoding:"base64"}),
+        function(loaded,total){ apkStatus("②/④ 上传中 "+(loaded/1048576).toFixed(1)+"/"+(total/1048576).toFixed(1)+" MB",false); });
+    }).then(function(blob){
+      apkStatus("③/④ 写入仓库引用…",false);
+      return ghGet("/repos/"+GITHUB_USER+"/"+GITHUB_REPO+"/git/refs/heads/"+GITHUB_BRANCH).then(function(ref){
+        var parentSha = ref.object.sha;
+        return ghGet("/repos/"+GITHUB_USER+"/"+GITHUB_REPO+"/git/commits/"+parentSha).then(function(commit){
+          return ghApiXhr("POST","/repos/"+GITHUB_USER+"/"+GITHUB_REPO+"/git/trees",
+            JSON.stringify({ base_tree: commit.tree.sha, tree: [ { path: remoteName, mode:"100644", type:"blob", sha: blob.sha } ] }))
+            .then(function(tree){
+              return ghApiXhr("POST","/repos/"+GITHUB_USER+"/"+GITHUB_REPO+"/git/commits",
+                JSON.stringify({ message:"整包发布 v"+vn+"（versionCode "+vc+"）", tree: tree.sha, parents:[parentSha] }));
+            }).then(function(newCommit){
+              return ghApiXhr("PATCH","/repos/"+GITHUB_USER+"/"+GITHUB_REPO+"/git/refs/heads/"+GITHUB_BRANCH,
+                JSON.stringify({ sha:newCommit.sha, force:false }));
+            });
+        });
+      });
+    }).then(function(){
+      apkStatus("④/④ 更新 manifest.js…",false);
+      /* 保留线上数据版本/说明，只替换 apk 段 */
+      return loadRemoteManifest().then(function(remote){
+        var dataVer = (remote && parseInt(remote.dataVersion,10)) || 0;
+        var notes = (remote && remote.notes) || "";
+        var content = buildManifest(dataVer, notes, apkMeta);
+        var fp = "manifest.js", sha = null;
+        return ghGet("/repos/"+GITHUB_USER+"/"+GITHUB_REPO+"/contents/"+fp+"?ref="+GITHUB_BRANCH)
+          .then(function(j){ sha=j.sha; })
+          .catch(function(){})
+          .then(function(){
+            return ghApiXhr("PUT","/repos/"+GITHUB_USER+"/"+GITHUB_REPO+"/contents/"+fp,
+              JSON.stringify({ message:"整包发布 v"+vn+"：更新 manifest", content: base64utf8(content), branch: GITHUB_BRANCH, sha: sha||undefined }));
+          });
+      });
+    }).then(function(){
+      saveCachedApk(apkMeta);
+      apkStatus("✅ 整包 v"+vn+" 已发布。GitHub Pages 约 1~2 分钟生效，之后旧版用户启动 App 即会收到升级提示。",false);
+      toast("整包发布成功");
+    }).catch(function(e){
+      apkStatus("❌ 整包发布失败："+(e && e.message ? e.message : "未知错误"),true);
+    }).then(function(){
+      $("btnApkPub").disabled = false;
+      picked = null; b64 = null;
+      try{ $("apkFile").value=""; }catch(e){}
+    });
+  };
+})();
 
 /* ================= 总览页 ================= */
 var DASH_STYLE=["#6366f1","#8b5cf6","#ec4899","#f59e0b","#10b981","#3b82f6"];
