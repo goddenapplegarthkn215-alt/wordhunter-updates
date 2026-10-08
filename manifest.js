@@ -1,17 +1,17 @@
 /* 更新清单 manifest.js */
 window.__WORDHUNTER_MANIFEST__ = {
-  dataVersion: 13,
+  dataVersion: 12,
   notes: "",
   files: [
     { name: "词库", url: "words.js" },
     { name: "游戏数据", url: "gamedata.js" }
   ],
   apk: {
-    "versionCode": 34,
-    "versionName": "1.6.9",
-    "url": "apk/wordhunter-1.6.9.apk",
-    "size": 49966334,
-    "sha256": "1da520cb388a36902c4740651f5a54de4f99367ccf86965541fcbba7ce32da08",
-    "notes": "1. 趣味拓展升级为「万物底层逻辑手册」（四层模型/12条原理/10大场景/7问速查）\n2. 手册与心理学效应图鉴可互相跳转\n3. 细节优化"
+    "versionCode": 35,
+    "versionName": "1.7.0",
+    "url": "apk/wordhunter-1.7.0.apk",
+    "size": 49995074,
+    "sha256": "7f4f74e5e62b99bf9bc19be6271c9f43dab3462808525006d0b3539a6e0fd043",
+    "notes": "1. 小佳学会了「万物底层逻辑手册」和「心理学效应图鉴」，问她问题会依据资料讲解\n2. 新增互动问答：点「出题考我」，她会出题、判分、追问，多轮陪你学\n3. 新增「帮我分析事」：用四层模型和七问速查拆解你遇到的具体事情\n4. 快捷入口：底层逻辑 / 出题考我 / 分析事 / 深夜效应"
   }
 };
