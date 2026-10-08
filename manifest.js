@@ -7,11 +7,11 @@ window.__WORDHUNTER_MANIFEST__ = {
     { name: "游戏数据", url: "gamedata.js" }
   ],
   apk: {
-    "versionCode": 33,
-    "versionName": "1.6.8",
-    "url": "apk/wordhunter-1.6.8.apk",
-    "size": 49949881,
-    "sha256": "2bd3c649d3f7d8e9d76b01d9b488e84a452e4ed28bf54060144cafe2af8445b6",
-    "notes": "1. 新增「心理学效应交互图鉴」：点头像 → 趣味拓展 进入\n2. 修复小佳面板弹窗被遮挡问题\n3. 细节优化"
+    "versionCode": 34,
+    "versionName": "1.6.9",
+    "url": "apk/wordhunter-1.6.9.apk",
+    "size": 49966334,
+    "sha256": "1da520cb388a36902c4740651f5a54de4f99367ccf86965541fcbba7ce32da08",
+    "notes": "1. 趣味拓展升级为「万物底层逻辑手册」（四层模型/12条原理/10大场景/7问速查）\n2. 手册与心理学效应图鉴可互相跳转\n3. 细节优化"
   }
 };
