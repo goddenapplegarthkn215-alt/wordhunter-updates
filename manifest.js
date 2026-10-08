@@ -7,11 +7,11 @@ window.__WORDHUNTER_MANIFEST__ = {
     { name: "游戏数据", url: "gamedata.js" }
   ],
   apk: {
-    "versionCode": 32,
-    "versionName": "1.6.7",
-    "url": "apk/wordhunter-1.6.7.apk",
-    "size": 49577003,
-    "sha256": "764e7f26339abf0c7740359bae2d0ad1963f42d44d5368f5d2c2141767fb2098",
-    "notes": "1. 修复小佳聊天面板中弹窗被遮挡、无法点击的问题\n2. 细节优化与问题修复"
+    "versionCode": 33,
+    "versionName": "1.6.8",
+    "url": "apk/wordhunter-1.6.8.apk",
+    "size": 49949881,
+    "sha256": "2bd3c649d3f7d8e9d76b01d9b488e84a452e4ed28bf54060144cafe2af8445b6",
+    "notes": "1. 新增「心理学效应交互图鉴」：点头像 → 趣味拓展 进入\n2. 修复小佳面板弹窗被遮挡问题\n3. 细节优化"
   }
 };
