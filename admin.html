@@ -319,12 +319,13 @@ code{background:#eef2ff;padding:1px 6px;border-radius:6px;color:#4f46e5;font-siz
         <select id="svTut"><option value="false">否</option><option value="true">是</option></select></label>
     </div>
     <div class="row" style="margin-top:14px">
+      <button class="btn sm" id="btnSavUnlockStages">🔓 解锁全部关卡：未开启</button>
       <button class="btn sm" id="btnSavAllAch">解锁全部成就</button>
       <button class="btn sm" id="btnSavAllEq">拥有全部装备</button>
       <button class="btn sm" id="btnSavAllWords">全部单词标记已掌握</button>
       <button class="btn sm bad" id="btnSavClearProg">清空单词进度</button>
     </div>
-    <div class="asst">「全部单词标记已掌握」会给词库里每个词写入熟练度 5，重新计算已学数；导入手机后怪物关卡会全部解锁。</div>
+    <div class="asst">「🔓 解锁全部关卡」只写一个开关：导入手机后 50 个讨伐目标全部开放，<b>不改动已学单词数和单词熟练度</b>；再点一次可关闭，恢复按已掌握词数解锁（需 v1.8.0 及以上版本 App）。「全部单词标记已掌握」会给词库里每个词写入熟练度 5，重新计算已学数，同样能解锁全部关卡，但会改动学习数据。</div>
   </div>
 </section>
 
@@ -1041,7 +1042,8 @@ function defaultSave(){
       dragonSlain:false,perfectWin:false,noDamageWin:false},
     daily:{date:"",tasks:{}},lastSignDate:"",streak:0,unlocked:[],
     owned:["w_stick","o_plain"],equipped:{weapon:"w_stick",outfit:"o_plain"},bestiary:{},
-    settings:{sound:true,vibe:true,bgm:false,volume:0.6},tutorialDone:false};
+    settings:{sound:true,vibe:true,bgm:false,volume:0.6},tutorialDone:false,
+    cheats:{unlockAllStages:false}};
 }
 function renderSav(){
   if(!SAV)return;
@@ -1050,8 +1052,15 @@ function renderSav(){
     ["已学单词",learned],["奖励分",SAV.gold],["累计分",SAV.totalGold],
     ["答对/错",(SAV.stats.totalCorrect||0)+"/"+(SAV.stats.totalWrong||0)],
     ["胜场",SAV.stats.wins||0],["最高连击",SAV.stats.bestCombo||0],
-    ["成就",(SAV.unlocked||[]).length],["装备",(SAV.owned||[]).length]
+    ["成就",(SAV.unlocked||[]).length],["装备",(SAV.owned||[]).length],
+    ["关卡",(SAV.cheats&&SAV.cheats.unlockAllStages)?"全部 50 关":"按学习进度"]
   ].map(function(x){return "<div><b>"+x[1]+"</b><span>"+x[0]+"</span></div>";}).join("");
+  var btnUS=$("btnSavUnlockStages");
+  if(btnUS){
+    var on=!!(SAV.cheats&&SAV.cheats.unlockAllStages);
+    btnUS.textContent=on?"🔓 解锁全部关卡：已开启 ✓":"🔓 解锁全部关卡：未开启";
+    btnUS.classList.toggle("ok",on);
+  }
   $("svLevel").value=SAV.level||"cet4";
   $("svStreak").value=SAV.streak||0;$("svGold").value=SAV.gold||0;$("svTotalGold").value=SAV.totalGold||0;
   $("svCorrect").value=SAV.stats.totalCorrect||0;$("svWrong").value=SAV.stats.totalWrong||0;
@@ -1074,9 +1083,13 @@ $("btnSavPaste").onclick=function(){
   $("siGo").onclick=function(){
     try{
       var s=JSON.parse($("savIn").value);
-      SAV=Object.assign(defaultSave(),s);
-      SAV.stats=Object.assign(defaultSave().stats,s.stats||{});
-      SAV.settings=Object.assign(defaultSave().settings,s.settings||{});
+      // 兼容 App「导出存档」的备份包裹格式 {kind:"backup", save:{...}}
+      if(s&&s.kind==="backup"&&s.save&&typeof s.save==="object")s=s.save;
+      var d=defaultSave();
+      SAV=Object.assign(d,s);
+      SAV.stats=Object.assign(d.stats,s.stats||{});
+      SAV.settings=Object.assign(d.settings,s.settings||{});
+      SAV.cheats=Object.assign(d.cheats,s.cheats||{});
       renderSav();closeModal();toast("存档已读取，可修改");
     }catch(e){toast("JSON 解析失败："+e.message,true);}
   };
@@ -1085,6 +1098,14 @@ $("btnSavBlank").onclick=function(){SAV=defaultSave();renderSav();toast("已载�
 $("btnSavValidate").onclick=function(){
   if(!SAV){toast("还没有存档",true);return;}
   try{collectSav();JSON.stringify(SAV);toast("✅ 格式正确，可导出");}catch(e){toast(e.message,true);}
+};
+$("btnSavUnlockStages").onclick=function(){
+  if(!SAV){toast("请先粘贴存档或用空白存档",true);return;}
+  collectSav();
+  if(!SAV.cheats)SAV.cheats={};
+  SAV.cheats.unlockAllStages=!SAV.cheats.unlockAllStages;
+  renderSav();
+  toast(SAV.cheats.unlockAllStages?"已开启：导入手机后 50 关全部解锁":"已关闭：恢复按已掌握词数解锁");
 };
 $("btnSavAllAch").onclick=function(){
   if(!SAV){toast("请先粘贴存档或用空白存档",true);return;}
