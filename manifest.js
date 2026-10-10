@@ -7,11 +7,11 @@ window.__WORDHUNTER_MANIFEST__ = {
     { name: "游戏数据", url: "gamedata.js" }
   ],
   apk: {
-    "versionCode": 36,
-    "versionName": "1.7.1",
-    "url": "apk/wordhunter-1.7.1.apk",
-    "size": 49999170,
-    "sha256": "98cc9771fb1665178fa1441888f2b0761fb1aacaa9faf0016b3b2babab327659",
-    "notes": "1. 趣味拓展新增「🎵 丝瓜音乐」：免登录、默认五源综合搜歌，App 内一键下载安装"
+    "versionCode": 45,
+    "versionName": "1.8.0",
+    "url": "apk/wordhunter-1.8.0.apk",
+    "size": 50048391,
+    "sha256": "b6f140eab73341a73aa08dd2f0dd48938b5d372c2e292c6151959bd80916fbc6",
+    "notes": "1. 支持后台一键解锁全部关卡：打开 App 后 50 关全部开放\n2. 战斗难度曲线调整，一关比一关难，四级词汇可完整学完"
   }
 };
