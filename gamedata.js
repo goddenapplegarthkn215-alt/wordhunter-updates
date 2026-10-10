@@ -115,7 +115,7 @@ window.ACHIEVEMENTS = [
 window.GAME_RULES = {
   proficiency: { max: 5, masterAt: 3, gainCorrect: 1, loseWrong: 1 },
   hero:        { baseHp: 120, baseAtk: 10, baseCrit: 0.08, critMax: 0.75 },
-  stages:      { total: 50, wordsPerStage: 20 },
+  stages:      { total: 50, wordsPerStage: 20, unlockAll: 1 },
   sign:        { base: 20, perStreak: 5, streakCap: 7 },
   battle:      { comboStep: 0.12, comboCap: 0.8, critMul: 2.2, jitterMin: 0.92, jitterMax: 1.08, foeJitterMin: 0.85, foeJitterMax: 1.15 },
   reward:      { accFactor: 1, comboFactor: 0.04, comboCap: 0.5, noDamage: 0.4 },
